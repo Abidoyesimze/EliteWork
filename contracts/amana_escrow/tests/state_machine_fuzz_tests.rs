@@ -1,9 +1,23 @@
 extern crate std;
 
 use amana_escrow::{EscrowContract, EscrowContractClient, TradeStatus};
-use quickcheck::TestResult;
-use quickcheck_macros::quickcheck;
-use soroban_sdk::{Address, Env, String as SStr, testutils::Address as _, token};
+use quickcheck::{Gen, QuickCheck, TestResult};
+use soroban_sdk::{
+    Address, Env, String as SStr,
+    testutils::{Address as _, EnvTestConfig},
+    token,
+};
+
+/// Fixed QuickCheck seed. Every property here drives a real `Env`, so each
+/// generated case is written to `test_snapshots/`; the unseeded `#[quickcheck]`
+/// macro rewrote that golden output on every run (#302). Change the seed
+/// deliberately, and commit the regenerated snapshots with it.
+const PROPERTY_SEED: u64 = 0x5747_E5EED;
+
+/// `QuickCheck` with QuickCheck's default size (100) and [`PROPERTY_SEED`].
+fn seeded_quickcheck() -> QuickCheck {
+    QuickCheck::new().rng(Gen::from_size_and_seed(100, PROPERTY_SEED))
+}
 
 struct FuzzEnv {
     env: Env,
@@ -16,7 +30,13 @@ struct FuzzEnv {
 
 impl FuzzEnv {
     fn new(fee_bps: u32) -> Self {
-        let env = Env::default();
+        // Each property builds an `Env` for every generated case, so snapshot
+        // capture would commit hundreds of large, unreviewable golden files
+        // (tens of MB) for random inputs. The properties assert their own
+        // invariants; they do not need golden output (#302).
+        let env = Env::new_with_config(EnvTestConfig {
+            capture_snapshot_at_drop: false,
+        });
         env.mock_all_auths();
         let admin = Address::generate(&env);
         let treasury = Address::generate(&env);
@@ -58,8 +78,7 @@ fn random_address(env: &Env) -> Address {
     Address::generate(env)
 }
 
-#[quickcheck]
-fn prop_state_machine_random_ops(
+fn prop_state_machine_random_ops_case(
     raw_amount: i64,
     raw_buyer_bps: u32,
     raw_seller_bps: u32,
@@ -148,8 +167,7 @@ fn prop_state_machine_random_ops(
     )
 }
 
-#[quickcheck]
-fn prop_fuzz_addresses_in_create_trade(raw_amount: i64, raw_fee_bps: u32) -> TestResult {
+fn prop_fuzz_addresses_in_create_trade_case(raw_amount: i64, raw_fee_bps: u32) -> TestResult {
     let fe = FuzzEnv::new(valid_bps(raw_fee_bps));
     let client = fe.client();
 
@@ -184,8 +202,7 @@ fn prop_fuzz_addresses_in_create_trade(raw_amount: i64, raw_fee_bps: u32) -> Tes
     TestResult::passed()
 }
 
-#[quickcheck]
-fn prop_storage_integrity_rapid_transitions(raw_amount: i64, raw_fee_bps: u32) -> TestResult {
+fn prop_storage_integrity_rapid_transitions_case(raw_amount: i64, raw_fee_bps: u32) -> TestResult {
     let fee_bps = valid_bps(raw_fee_bps);
     let amount = valid_amount(raw_amount);
 
@@ -220,8 +237,7 @@ fn prop_storage_integrity_rapid_transitions(raw_amount: i64, raw_fee_bps: u32) -
     TestResult::passed()
 }
 
-#[quickcheck]
-fn prop_resolve_dispute_fuzz(
+fn prop_resolve_dispute_fuzz_case(
     raw_amount: i64,
     raw_seller_gets_bps: u32,
     raw_fee_bps: u32,
@@ -261,8 +277,7 @@ fn prop_resolve_dispute_fuzz(
     )
 }
 
-#[quickcheck]
-fn prop_boundary_fuzz(raw_amount_seed: u64, raw_fee_bps: u32) -> TestResult {
+fn prop_boundary_fuzz_case(raw_amount_seed: u64, raw_fee_bps: u32) -> TestResult {
     let base_amounts = [
         1i128,
         10,
@@ -334,8 +349,7 @@ fn prop_boundary_fuzz(raw_amount_seed: u64, raw_fee_bps: u32) -> TestResult {
     TestResult::passed()
 }
 
-#[quickcheck]
-fn prop_many_trades_rapid_creation(raw_count: u32, raw_fee_bps: u32) -> TestResult {
+fn prop_many_trades_rapid_creation_case(raw_count: u32, raw_fee_bps: u32) -> TestResult {
     let count = (raw_count % 50) + 1;
     let fee_bps = valid_bps(raw_fee_bps);
 
@@ -368,4 +382,44 @@ fn prop_many_trades_rapid_creation(raw_count: u32, raw_fee_bps: u32) -> TestResu
     }
 
     TestResult::passed()
+}
+
+// ---------------------------------------------------------------------------
+// Seeded runners
+// ---------------------------------------------------------------------------
+
+#[test]
+fn prop_state_machine_random_ops() {
+    seeded_quickcheck().quickcheck(
+        prop_state_machine_random_ops_case as fn(i64, u32, u32, u32, u64) -> TestResult,
+    );
+}
+
+#[test]
+fn prop_fuzz_addresses_in_create_trade() {
+    seeded_quickcheck()
+        .quickcheck(prop_fuzz_addresses_in_create_trade_case as fn(i64, u32) -> TestResult);
+}
+
+#[test]
+fn prop_storage_integrity_rapid_transitions() {
+    seeded_quickcheck()
+        .quickcheck(prop_storage_integrity_rapid_transitions_case as fn(i64, u32) -> TestResult);
+}
+
+#[test]
+fn prop_resolve_dispute_fuzz() {
+    seeded_quickcheck()
+        .quickcheck(prop_resolve_dispute_fuzz_case as fn(i64, u32, u32) -> TestResult);
+}
+
+#[test]
+fn prop_boundary_fuzz() {
+    seeded_quickcheck().quickcheck(prop_boundary_fuzz_case as fn(u64, u32) -> TestResult);
+}
+
+#[test]
+fn prop_many_trades_rapid_creation() {
+    seeded_quickcheck()
+        .quickcheck(prop_many_trades_rapid_creation_case as fn(u32, u32) -> TestResult);
 }

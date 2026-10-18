@@ -123,6 +123,26 @@ UPDATE_SNAPSHOTS=1 cargo test --locked
 The regeneration is **idempotent**: running it twice produces the same
 snapshot files with no diff.
 
+### CI enforcement
+
+The **Contracts Required Gate** in `.github/workflows/ci.yml` deletes
+`test_snapshots/`, runs `cargo test --locked` (which regenerates every
+snapshot), then fails the **Snapshots are current** step if `git status` shows
+any change under `test_snapshots/`:
+
+- **modified** — a committed snapshot is stale, or its test is not
+  deterministic (see §2: seed every RNG, including QuickCheck);
+- **deleted** — an orphan whose test was removed, renamed, or now runs fewer
+  cases;
+- **untracked** — a new test's snapshot was never committed.
+
+Fix all three the same way:
+
+```bash
+cd contracts/amana_escrow && rm -rf test_snapshots && cargo test --locked
+git add -A test_snapshots
+```
+
 ---
 
 ## 6. Parallel-safe assertions
@@ -147,8 +167,13 @@ The `scripts/verify-test-determinism.sh` script runs the full test suite
 bash scripts/verify-test-determinism.sh
 ```
 
-If any run produces a different result, the script exits with code 1 and
-lists the failing test. This script is the authoritative check for
+If any run produces a different result — a different `test result:` summary
+(timing excluded) or different golden output under `test_snapshots/` — the
+script exits with code 1 and lists the failing test or changed snapshot.
+
+It runs nightly (and on demand via *Run workflow*, with a configurable repeat
+count) in `.github/workflows/contract-determinism.yml`, which also fails if the
+regenerated snapshots differ from the committed ones. This script is the authoritative check for
 determinism; local spot checks (`cargo test` once) are insufficient.
 
 ---

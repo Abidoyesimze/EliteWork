@@ -2,10 +2,16 @@
 # cleanup-test-snapshots.sh — Remove unreferenced snapshot files under
 # contracts/amana_escrow/test_snapshots/.
 #
-# A snapshot file is considered "orphaned" when its basename does not appear
-# as a string literal in any Rust source file under contracts/amana_escrow/src/
-# or contracts/amana_escrow/tests/.  This script never deletes files that
-# ARE referenced.
+# soroban-sdk writes one snapshot per `Env` a test creates, named after the
+# test function: `<module path>/<test_fn>.<n>.json`. A snapshot is therefore
+# "referenced" when a `fn <test_fn>` still exists in a Rust source file under
+# contracts/amana_escrow/src/ or contracts/amana_escrow/tests/, or when its
+# basename appears there as a string literal (hand-maintained golden files).
+# Anything else is "orphaned". This script never deletes files that ARE
+# referenced.
+#
+# Issue #302 — the previous version only checked for string literals, so every
+# SDK-generated snapshot looked orphaned and a non-dry run deleted them all.
 #
 # Usage:
 #   bash scripts/cleanup-test-snapshots.sh [--dry-run]
@@ -84,13 +90,29 @@ find "$CONTRACT_DIR/src" "$CONTRACT_DIR/tests" \
 # Deduplicate
 sort -u -o "$REFERENCED_TOKENS" "$REFERENCED_TOKENS"
 
+# Names of every function declared in the sources; SDK snapshots are keyed on
+# the test function name.
+DECLARED_FNS=$(mktemp)
+trap 'rm -f "$REFERENCED_TOKENS" "$DECLARED_FNS"' EXIT
+
+find "$CONTRACT_DIR/src" "$CONTRACT_DIR/tests" \
+  -name '*.rs' \
+  -not -path '*/_generated/*' \
+  -print0 2>/dev/null \
+  | xargs -0 cat 2>/dev/null \
+  | grep -oE '\bfn [A-Za-z_][A-Za-z0-9_]*' \
+  | sed 's/^fn //' \
+  | sort -u > "$DECLARED_FNS" || true
+
 ORPHAN_COUNT=0
 CLEANED_COUNT=0
 
 for snapshot in "${SNAPSHOT_FILES[@]}"; do
   basename=$(basename "$snapshot")
+  # `<test_fn>.<n>.json` -> `<test_fn>`
+  test_fn=$(printf '%s' "$basename" | sed -E 's/\.[0-9]+\.json$//')
 
-  if grep -qF "$basename" "$REFERENCED_TOKENS"; then
+  if grep -qxF "$test_fn" "$DECLARED_FNS" || grep -qF "$basename" "$REFERENCED_TOKENS"; then
     echo "  ✓ referenced: $basename"
   else
     echo "  ✗ orphan:     $basename"

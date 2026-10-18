@@ -3,6 +3,13 @@
 # zero inter-run variance (issue #246 acceptance criterion: 50x repeat with
 # zero variance).
 #
+# Two things must hold on every run:
+#   - the `test result:` summaries match (pass/fail/ignored counts; the
+#     `finished in Ns` timing is stripped, since it differs on every run), and
+#   - the golden output under test_snapshots/ is byte-identical to the first
+#     run's, so a test whose snapshot depends on time, ordering or randomness
+#     is caught even when it passes (issue #302).
+#
 # Usage:
 #   bash scripts/verify-test-determinism.sh [REPEAT_COUNT]
 #
@@ -19,8 +26,21 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 CONTRACT_DIR="$ROOT_DIR/contracts/amana_escrow"
 REPEAT_COUNT="${1:-50}"
+SNAPSHOT_DIR="$CONTRACT_DIR/test_snapshots"
 LOG_DIR=$(mktemp -d)
 trap 'rm -rf "$LOG_DIR"' EXIT
+
+# Strip per-run timing so only the outcome counts are compared.
+summary() {
+  grep '^test result:' "$1" | sed -E 's/; finished in [0-9.]+s$//' | sort
+}
+
+# Content hash of every snapshot file, keyed by path.
+snapshot_digest() {
+  if [[ -d "$SNAPSHOT_DIR" ]]; then
+    (cd "$SNAPSHOT_DIR" && find . -type f -print0 | sort -z | xargs -0 sha256sum)
+  fi
+}
 
 echo "═══════════════════════════════════════════════════════════════"
 echo "  Amana Escrow — Determinism Verification"
@@ -30,7 +50,7 @@ echo ""
 
 PASS=0
 FAIL=0
-FIRST_LOG="$LOG_DIR/run_001.log"
+FIRST_SNAPSHOTS=""
 
 for i in $(seq 1 "$REPEAT_COUNT"); do
   PADDED=$(printf "%03d" "$i")
@@ -42,9 +62,21 @@ for i in $(seq 1 "$REPEAT_COUNT"); do
     echo " ✅"
     PASS=$((PASS + 1))
   else
-    echo " ❌ (see $RUN_LOG)"
+    echo " ❌"
+    # The log directory is removed on exit, so surface the failure now.
+    grep -E '^test .* FAILED$|panicked at|^error' "$RUN_LOG" | head -20 | sed 's/^/      /'
     FAIL=$((FAIL + 1))
     continue
+  fi
+
+  CURRENT_SNAPSHOTS=$(snapshot_digest)
+  if [[ -z "$FIRST_SNAPSHOTS" ]]; then
+    FIRST_SNAPSHOTS="$CURRENT_SNAPSHOTS"
+  elif [[ "$CURRENT_SNAPSHOTS" != "$FIRST_SNAPSHOTS" ]]; then
+    echo ""
+    echo "  ⚠️  test_snapshots/ output changed on run $i"
+    diff <(echo "$FIRST_SNAPSHOTS") <(echo "$CURRENT_SNAPSHOTS") | grep '^[<>]' | head -20 | sed 's/^/      /' || true
+    FAIL=$((FAIL + 1))
   fi
 
   # After the first successful run, compare subsequent outputs
@@ -52,9 +84,9 @@ for i in $(seq 1 "$REPEAT_COUNT"); do
     PREV_PADDED=$(printf "%03d" $((i - 1)))
     PREV_LOG="$LOG_DIR/run_$PREV_PADDED.log"
     # Compare the "test result:" summary lines to detect inter-run variance
-    CURRENT_SUMMARY=$(grep '^test result:' "$RUN_LOG" | sort)
-    PREVIOUS_SUMMARY=$(grep '^test result:' "$PREV_LOG" | sort)
-    if [[ "$CURRENT_SUMMARY" != "$PREVIOUS_SUMMARY" ]]; then
+    CURRENT_SUMMARY=$(summary "$RUN_LOG")
+    PREVIOUS_SUMMARY=$(summary "$PREV_LOG")
+    if [[ -f "$PREV_LOG" && "$CURRENT_SUMMARY" != "$PREVIOUS_SUMMARY" ]]; then
       echo ""
       echo "  ⚠️  Inter-run variance detected between run $((i-1)) and run $i"
       echo "    Previous: $PREVIOUS_SUMMARY"

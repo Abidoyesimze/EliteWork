@@ -7299,6 +7299,17 @@ mod property_tests {
 
     use super::*;
     use quickcheck::{Arbitrary, Gen, QuickCheck, TestResult};
+
+    /// Fixed QuickCheck seed. Several of these properties drive a real `Env`,
+    /// so each generated case is written to `test_snapshots/`; an unseeded
+    /// generator rewrote that golden output on every run (#302). Change the
+    /// seed deliberately, and commit the regenerated snapshots with it.
+    const PROPERTY_SEED: u64 = 0xA3A7A_5EED;
+
+    /// `QuickCheck` with QuickCheck's default size (100) and [`PROPERTY_SEED`].
+    fn seeded_quickcheck() -> QuickCheck {
+        QuickCheck::new().rng(Gen::from_size_and_seed(100, PROPERTY_SEED))
+    }
     use soroban_sdk::testutils::Address as _;
     use soroban_sdk::{Address, Env, token};
     use std::boxed::Box;
@@ -7321,7 +7332,9 @@ mod property_tests {
     impl Arbitrary for DisputeTestCase {
         fn arbitrary(g: &mut Gen) -> Self {
             // Generate amounts that are realistic but varied
-            let total_amount = 1 + (i128::arbitrary(g) % 1_000_000);
+            // rem_euclid keeps this in 1..=1_000_000; `%` on a negative i128
+            // produced negative totals that no payout property holds for.
+            let total_amount = 1 + i128::arbitrary(g).rem_euclid(1_000_000);
             let buyer_loss_bps = u32::arbitrary(g) % 10_001;
             let seller_loss_bps = u32::arbitrary(g) % 10_001;
             let seller_gets_bps = u32::arbitrary(g) % 10_001;
@@ -7348,20 +7361,24 @@ mod property_tests {
                 });
             }
 
-            // Edge cases for basis points
-            for &bps in &[0, 1, 5000, 9999, 10000] {
-                if self.buyer_loss_bps != bps
-                    || self.seller_loss_bps != bps
-                    || self.seller_gets_bps != bps
-                {
+            // Edge cases for basis points. Only propose values below the
+            // current one so every candidate is strictly smaller and shrinking
+            // terminates; proposing values in both directions let a failing
+            // case bounce between candidates forever.
+            for &bps in &[0, 1, 5000, 9999] {
+                if bps < self.buyer_loss_bps {
                     shrunk.push(DisputeTestCase {
                         buyer_loss_bps: bps,
                         ..self.clone()
                     });
+                }
+                if bps < self.seller_loss_bps {
                     shrunk.push(DisputeTestCase {
                         seller_loss_bps: bps,
                         ..self.clone()
                     });
+                }
+                if bps < self.seller_gets_bps {
                     shrunk.push(DisputeTestCase {
                         seller_gets_bps: bps,
                         ..self.clone()
@@ -7436,7 +7453,7 @@ mod property_tests {
 
     #[test]
     fn test_property_fund_conservation() {
-        QuickCheck::new()
+        seeded_quickcheck()
             .tests(100)
             .quickcheck(prop_fund_conservation as fn(DisputeTestCase) -> TestResult);
     }
@@ -7479,7 +7496,7 @@ mod property_tests {
 
     #[test]
     fn test_property_loss_distribution() {
-        QuickCheck::new()
+        seeded_quickcheck()
             .tests(100)
             .quickcheck(prop_loss_distribution as fn(DisputeTestCase) -> TestResult);
     }
@@ -7529,7 +7546,7 @@ mod property_tests {
 
     #[test]
     fn test_property_monotonicity() {
-        QuickCheck::new()
+        seeded_quickcheck()
             .tests(100)
             .quickcheck(prop_monotonicity as fn(DisputeTestCase) -> TestResult);
     }
@@ -7565,7 +7582,7 @@ mod property_tests {
 
     #[test]
     fn test_property_non_negativity() {
-        QuickCheck::new()
+        seeded_quickcheck()
             .tests(100)
             .quickcheck(prop_non_negativity as fn(DisputeTestCase) -> TestResult);
     }
@@ -8299,7 +8316,7 @@ mod property_tests {
 
     #[test]
     fn test_property_valid_lifecycle_transitions() {
-        QuickCheck::new()
+        seeded_quickcheck()
             .tests(20)
             .quickcheck(prop_valid_lifecycle_transitions as fn(LifecycleScenario) -> TestResult);
     }
@@ -8370,7 +8387,7 @@ mod property_tests {
 
     #[test]
     fn test_property_rejects_invalid_lifecycle_transitions() {
-        QuickCheck::new().tests(20).quickcheck(
+        seeded_quickcheck().tests(20).quickcheck(
             prop_rejects_invalid_lifecycle_transition as fn(LifecycleScenario) -> TestResult,
         );
     }

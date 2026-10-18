@@ -680,9 +680,26 @@ jobs:
         if: needs.changes.outputs.contracts == 'true'
         run: ../../scripts/check-contract-deployment-safety.sh
 
+      # Issue #302 — `cargo test` regenerates test_snapshots/ from scratch, so
+      # the "Snapshots are current" step below sees stale (modified), orphaned
+      # (deleted) and never-committed (untracked) snapshots alike.
+      - name: Clear snapshots before regenerating them
+        if: needs.changes.outputs.contracts == 'true'
+        run: rm -rf test_snapshots
+
       - name: Test
         if: needs.changes.outputs.contracts == 'true'
         run: cargo test --locked
+
+      - name: Snapshots are current
+        if: needs.changes.outputs.contracts == 'true'
+        run: |
+          DRIFT=$(git status --porcelain -- test_snapshots)
+          if [ -n "$DRIFT" ]; then
+            echo "::error::test_snapshots/ is out of date. Run 'rm -rf test_snapshots && cargo test' in contracts/amana_escrow and commit the result."
+            echo "$DRIFT"
+            exit 1
+          fi
 
       - name: Build WASM artifact
         if: needs.changes.outputs.contracts == 'true'

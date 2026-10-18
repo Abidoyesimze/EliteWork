@@ -1,0 +1,67 @@
+name: Contract Test Determinism
+
+# Issue #302 — docs/test-determinism.md §6 names
+# scripts/verify-test-determinism.sh as the authoritative determinism check,
+# run nightly. It repeats the full amana_escrow suite and fails on any
+# inter-run variance in results or in the golden output under test_snapshots/.
+# Too slow for every PR, so it runs on a schedule and on demand.
+
+on:
+  workflow_dispatch:
+    inputs:
+      repeat:
+        description: "Number of times to run the suite"
+        required: false
+        default: "50"
+  schedule:
+    # Nightly at 03:30 UTC
+    - cron: "30 3 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: contract-determinism
+  cancel-in-progress: true
+
+jobs:
+  determinism:
+    name: Determinism (cargo test x N)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            contracts/target
+          key: contract-determinism-${{ runner.os }}-${{ hashFiles('contracts/Cargo.lock') }}
+          restore-keys: contract-determinism-${{ runner.os }}-
+
+      # Regenerate from scratch so orphaned snapshots also show up below.
+      - name: Clear snapshots before regenerating them
+        run: rm -rf contracts/amana_escrow/test_snapshots
+
+      - name: Verify test determinism
+        env:
+          REPEAT: ${{ github.event.inputs.repeat || '50' }}
+        run: bash scripts/verify-test-determinism.sh "$REPEAT"
+
+      # The repeated runs also prove the snapshots are stable; this proves
+      # they match what is committed.
+      - name: Snapshots match the committed golden output
+        run: |
+          DRIFT=$(git status --porcelain -- contracts/amana_escrow/test_snapshots)
+          if [ -n "$DRIFT" ]; then
+            echo "::error::test_snapshots/ differs from the committed snapshots."
+            echo "$DRIFT"
+            exit 1
+          fi

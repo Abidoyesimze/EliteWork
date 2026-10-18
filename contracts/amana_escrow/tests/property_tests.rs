@@ -16,18 +16,17 @@ use std::env as stdenv;
 // Seed / iteration helpers
 // ---------------------------------------------------------------------------
 
+/// Seed used when AMANA_PROP_SEED is unset.
+const DEFAULT_SEED: u64 = 42;
+
 fn get_seed() -> u64 {
     stdenv::var("AMANA_PROP_SEED")
         .ok()
         .and_then(|v| v.parse().ok())
-        .unwrap_or_else(|| {
-            // Derive a stable-ish seed from the wall clock so different CI runs
-            // still vary, but the value is always printed for replay.
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map(|d| d.as_secs())
-                .unwrap_or(42)
-        })
+        // Fixed default: these properties drive a real `Env`, so every case is
+        // written to `test_snapshots/` and a wall-clock seed rewrote that golden
+        // output on every run (#302). Set AMANA_PROP_SEED to explore other seeds.
+        .unwrap_or(DEFAULT_SEED)
 }
 
 fn get_iterations() -> usize {

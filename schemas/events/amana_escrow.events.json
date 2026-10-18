@@ -610,6 +610,200 @@
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "DisputeVoteCast",
+      "rustStruct": "DisputeVoteCastEvent",
+      "topics": [
+        "DVOTE"
+      ],
+      "fields": [
+        {
+          "name": "trade_id",
+          "type": "u64"
+        },
+        {
+          "name": "mediator",
+          "type": "Address"
+        },
+        {
+          "name": "seller_gets_bps",
+          "type": "u32"
+        },
+        {
+          "name": "weight",
+          "type": "u32"
+        },
+        {
+          "name": "rationale_hash",
+          "type": "String"
+        },
+        {
+          "name": "outcome_weight",
+          "type": "u32"
+        },
+        {
+          "name": "weight_to_quorum",
+          "type": "u32"
+        },
+        {
+          "name": "voted_at",
+          "type": "u64"
+        },
+        {
+          "name": "schema_version",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "DisputeQuorumResolved",
+      "rustStruct": "DisputeQuorumResolvedEvent",
+      "topics": [
+        "DQURES"
+      ],
+      "fields": [
+        {
+          "name": "trade_id",
+          "type": "u64"
+        },
+        {
+          "name": "seller_gets_bps",
+          "type": "u32"
+        },
+        {
+          "name": "outcome",
+          "type": "QuorumOutcome"
+        },
+        {
+          "name": "winning_weight",
+          "type": "u32"
+        },
+        {
+          "name": "total_weight",
+          "type": "u32"
+        },
+        {
+          "name": "vote_count",
+          "type": "u32"
+        },
+        {
+          "name": "schema_version",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "QuorumConfigUpdated",
+      "rustStruct": "QuorumConfigUpdatedEvent",
+      "topics": [
+        "QURCFG"
+      ],
+      "fields": [
+        {
+          "name": "enabled",
+          "type": "bool"
+        },
+        {
+          "name": "value_threshold",
+          "type": "i128"
+        },
+        {
+          "name": "required_weight",
+          "type": "u32"
+        },
+        {
+          "name": "vote_window_secs",
+          "type": "u64"
+        },
+        {
+          "name": "fallback_min_weight",
+          "type": "u32"
+        },
+        {
+          "name": "schema_version",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "MediatorWeightUpdated",
+      "rustStruct": "MediatorWeightUpdatedEvent",
+      "topics": [
+        "MEDWGT"
+      ],
+      "fields": [
+        {
+          "name": "mediator",
+          "type": "Address"
+        },
+        {
+          "name": "weight",
+          "type": "u32"
+        },
+        {
+          "name": "schema_version",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "DeadlineExtensionBudget",
+      "rustStruct": "DeadlineExtensionBudgetEvent",
+      "topics": [
+        "DEDBGT"
+      ],
+      "fields": [
+        {
+          "name": "trade_id",
+          "type": "u64"
+        },
+        {
+          "name": "extensions_used",
+          "type": "u32"
+        },
+        {
+          "name": "extensions_remaining",
+          "type": "u32"
+        },
+        {
+          "name": "original_deadline",
+          "type": "u64"
+        },
+        {
+          "name": "extended_by_secs",
+          "type": "u64"
+        },
+        {
+          "name": "extension_secs_remaining",
+          "type": "u64"
+        },
+        {
+          "name": "schema_version",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "ExtensionPolicyUpdated",
+      "rustStruct": "ExtensionPolicyUpdatedEvent",
+      "topics": [
+        "EXTPOL"
+      ],
+      "fields": [
+        {
+          "name": "max_extensions",
+          "type": "u32"
+        },
+        {
+          "name": "max_total_extension_secs",
+          "type": "u64"
+        },
+        {
+          "name": "schema_version",
+          "type": "u32"
+        }
+      ]
     }
   ]
 }

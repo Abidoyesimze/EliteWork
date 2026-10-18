@@ -37,6 +37,12 @@ export enum GeneratedEventType {
   TimelockOperationExecuted = "TimelockOperationExecuted",
   TimelockOperationCancelled = "TimelockOperationCancelled",
   ContractUpgradeQueued = "ContractUpgradeQueued",
+  DisputeVoteCast = "DisputeVoteCast",
+  DisputeQuorumResolved = "DisputeQuorumResolved",
+  QuorumConfigUpdated = "QuorumConfigUpdated",
+  MediatorWeightUpdated = "MediatorWeightUpdated",
+  DeadlineExtensionBudget = "DeadlineExtensionBudget",
+  ExtensionPolicyUpdated = "ExtensionPolicyUpdated",
 }
 
 /**
@@ -73,6 +79,12 @@ export const TOPIC_TO_EVENT_TYPE: Readonly<Record<string, GeneratedEventType>> =
   "TLKEXE": GeneratedEventType.TimelockOperationExecuted,
   "TLKCAN": GeneratedEventType.TimelockOperationCancelled,
   "UPGQUE": GeneratedEventType.ContractUpgradeQueued,
+  "DVOTE": GeneratedEventType.DisputeVoteCast,
+  "DQURES": GeneratedEventType.DisputeQuorumResolved,
+  "QURCFG": GeneratedEventType.QuorumConfigUpdated,
+  "MEDWGT": GeneratedEventType.MediatorWeightUpdated,
+  "DEDBGT": GeneratedEventType.DeadlineExtensionBudget,
+  "EXTPOL": GeneratedEventType.ExtensionPolicyUpdated,
 };
 
 /** Full topic tuple each event is published under. */
@@ -104,6 +116,12 @@ export const EVENT_TOPICS: Readonly<Record<GeneratedEventType, readonly string[]
   [GeneratedEventType.TimelockOperationExecuted]: ["TLKEXE"],
   [GeneratedEventType.TimelockOperationCancelled]: ["TLKCAN"],
   [GeneratedEventType.ContractUpgradeQueued]: ["UPGQUE"],
+  [GeneratedEventType.DisputeVoteCast]: ["DVOTE"],
+  [GeneratedEventType.DisputeQuorumResolved]: ["DQURES"],
+  [GeneratedEventType.QuorumConfigUpdated]: ["QURCFG"],
+  [GeneratedEventType.MediatorWeightUpdated]: ["MEDWGT"],
+  [GeneratedEventType.DeadlineExtensionBudget]: ["DEDBGT"],
+  [GeneratedEventType.ExtensionPolicyUpdated]: ["EXTPOL"],
 };
 
 /** Field names of each event, in declaration order. */
@@ -135,6 +153,12 @@ export const EVENT_FIELDS: Readonly<Record<GeneratedEventType, readonly string[]
   [GeneratedEventType.TimelockOperationExecuted]: ["operation_id", "executed_at"],
   [GeneratedEventType.TimelockOperationCancelled]: ["operation_id", "cancelled_at", "admin"],
   [GeneratedEventType.ContractUpgradeQueued]: ["operation_id", "new_wasm_hash", "queued_at", "execute_after"],
+  [GeneratedEventType.DisputeVoteCast]: ["trade_id", "mediator", "seller_gets_bps", "weight", "rationale_hash", "outcome_weight", "weight_to_quorum", "voted_at", "schema_version"],
+  [GeneratedEventType.DisputeQuorumResolved]: ["trade_id", "seller_gets_bps", "outcome", "winning_weight", "total_weight", "vote_count", "schema_version"],
+  [GeneratedEventType.QuorumConfigUpdated]: ["enabled", "value_threshold", "required_weight", "vote_window_secs", "fallback_min_weight", "schema_version"],
+  [GeneratedEventType.MediatorWeightUpdated]: ["mediator", "weight", "schema_version"],
+  [GeneratedEventType.DeadlineExtensionBudget]: ["trade_id", "extensions_used", "extensions_remaining", "original_deadline", "extended_by_secs", "extension_secs_remaining", "schema_version"],
+  [GeneratedEventType.ExtensionPolicyUpdated]: ["max_extensions", "max_total_extension_secs", "schema_version"],
 };
 
 /** Payload of the `amana/initialized` event. */
@@ -334,6 +358,65 @@ export interface ContractUpgradeQueuedPayload {
   execute_after: bigint;
 }
 
+/** Payload of the `DVOTE` event. */
+export interface DisputeVoteCastPayload {
+  trade_id: bigint;
+  mediator: string;
+  seller_gets_bps: number;
+  weight: number;
+  rationale_hash: string;
+  outcome_weight: number;
+  weight_to_quorum: number;
+  voted_at: bigint;
+  schema_version: number;
+}
+
+/** Payload of the `DQURES` event. */
+export interface DisputeQuorumResolvedPayload {
+  trade_id: bigint;
+  seller_gets_bps: number;
+  outcome: ["Quorum"] | ["Fallback"];
+  winning_weight: number;
+  total_weight: number;
+  vote_count: number;
+  schema_version: number;
+}
+
+/** Payload of the `QURCFG` event. */
+export interface QuorumConfigUpdatedPayload {
+  enabled: boolean;
+  value_threshold: bigint;
+  required_weight: number;
+  vote_window_secs: bigint;
+  fallback_min_weight: number;
+  schema_version: number;
+}
+
+/** Payload of the `MEDWGT` event. */
+export interface MediatorWeightUpdatedPayload {
+  mediator: string;
+  weight: number;
+  schema_version: number;
+}
+
+/** Payload of the `DEDBGT` event. */
+export interface DeadlineExtensionBudgetPayload {
+  trade_id: bigint;
+  extensions_used: number;
+  extensions_remaining: number;
+  original_deadline: bigint;
+  extended_by_secs: bigint;
+  extension_secs_remaining: bigint;
+  schema_version: number;
+}
+
+/** Payload of the `EXTPOL` event. */
+export interface ExtensionPolicyUpdatedPayload {
+  max_extensions: number;
+  max_total_extension_secs: bigint;
+  schema_version: number;
+}
+
 /** Payload type for a given event type. */
 export interface EventPayloadMap {
   [GeneratedEventType.Initialized]: InitializedPayload;
@@ -363,6 +446,12 @@ export interface EventPayloadMap {
   [GeneratedEventType.TimelockOperationExecuted]: TimelockOperationExecutedPayload;
   [GeneratedEventType.TimelockOperationCancelled]: TimelockOperationCancelledPayload;
   [GeneratedEventType.ContractUpgradeQueued]: ContractUpgradeQueuedPayload;
+  [GeneratedEventType.DisputeVoteCast]: DisputeVoteCastPayload;
+  [GeneratedEventType.DisputeQuorumResolved]: DisputeQuorumResolvedPayload;
+  [GeneratedEventType.QuorumConfigUpdated]: QuorumConfigUpdatedPayload;
+  [GeneratedEventType.MediatorWeightUpdated]: MediatorWeightUpdatedPayload;
+  [GeneratedEventType.DeadlineExtensionBudget]: DeadlineExtensionBudgetPayload;
+  [GeneratedEventType.ExtensionPolicyUpdated]: ExtensionPolicyUpdatedPayload;
 }
 
 /** Events that move a trade's status, and where they move it to. */

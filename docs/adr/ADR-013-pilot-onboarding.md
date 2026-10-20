@@ -1,4 +1,4 @@
-# ADR-005: Pilot Onboarding Flow and Lightweight KYC
+# ADR-013: Pilot Onboarding Flow and Lightweight KYC
 
 ## Status
 

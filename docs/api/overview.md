@@ -5,6 +5,8 @@ authentication, base URLs, rate limits, and pagination conventions that apply
 across every endpoint. For endpoint-by-endpoint detail see:
 
 - [trades.md](./trades.md) - trade lifecycle endpoints
+- [dispute.md](./dispute.md) - dispute and dispute category endpoints
+- [evidence.md](./evidence.md) - evidence upload and retrieval endpoints
 - [stellar.md](./stellar.md) - Stellar network proxy endpoints
 - [manifest.md](./manifest.md) - trade delivery manifest endpoints
 - [wallet.md](./wallet.md) - caller's wallet balance and path payment quotes

@@ -3,11 +3,18 @@
 /// Verifies clawback events carry identifiers needed for backend dedupe.
 /// Uses the shared [`AdminSignerFixture`] (#108).
 ///
+/// Issue #298 — Review edge-case coverage:
+/// Boundary amounts, unauthorized-caller attempts, and repeated/duplicate calls.
+///
 /// Note: Soroban testutils `env.events().all()` reflects events from the
 /// latest host invocation, so multi-step suites assert per-call.
 extern crate std;
 
-use amana_escrow::{EVENT_SCHEMA_VERSION, test_fixture::AdminSignerFixture};
+use amana_escrow::{
+    auth_invoke,
+    test_fixture::{clawback_auth_args, AdminSignerFixture},
+    EVENT_SCHEMA_VERSION, TradeStatus,
+};
 use soroban_sdk::{
     testutils::{Address as _, Events},
     xdr::{ContractEventBody, ScVal},
@@ -181,4 +188,118 @@ fn test_disputed_trade_clawback_emits_event() {
     h.client().admin_clawback(&trade_id, &amount, &h.buyer);
 
     assert_eq!(clawback_event_payloads(&h.env).len(), 1);
+}
+
+// -----------------------------------------------------------------------------
+// Issue #298: Boundary Amounts and Event Verification
+// -----------------------------------------------------------------------------
+
+#[test]
+#[should_panic(expected = "CLAWBACK_INVALID_AMOUNT")]
+fn test_boundary_zero_amount_clawback_emits_no_event() {
+    let h = AdminSignerFixture::new();
+    let trade_id = h.funded_trade(5_000);
+
+    // Zero amount must panic before event publication
+    h.client().admin_clawback(&trade_id, &0i128, &h.buyer);
+}
+
+#[test]
+#[should_panic(expected = "CLAWBACK_INVALID_AMOUNT")]
+fn test_boundary_negative_amount_clawback_emits_no_event() {
+    let h = AdminSignerFixture::new();
+    let trade_id = h.funded_trade(5_000);
+
+    // Negative amount must panic before event publication
+    h.client().admin_clawback(&trade_id, &-500i128, &h.buyer);
+}
+
+#[test]
+#[should_panic(expected = "clawback_amount exceeds remaining escrowed amount")]
+fn test_boundary_amount_exceeding_balance_emits_no_event() {
+    let h = AdminSignerFixture::new();
+    let amount = 3_000_i128;
+    let trade_id = h.funded_trade(amount);
+
+    // Over-clawback must panic before event publication
+    h.client().admin_clawback(&trade_id, &(amount + 1), &h.buyer);
+}
+
+#[test]
+fn test_boundary_minimum_amount_one_emits_valid_event() {
+    let h = AdminSignerFixture::new();
+    let amount = 2_000_i128;
+    let trade_id = h.funded_trade(amount);
+
+    // Smallest valid boundary amount
+    h.client().admin_clawback(&trade_id, &1i128, &h.buyer);
+
+    let events = clawback_event_payloads(&h.env);
+    assert_eq!(events.len(), 1);
+    assert!(payload_has_u64(&events[0], trade_id));
+    assert!(payload_has_schema_version(&events[0]));
+    assert_eq!(events[0].len(), 6);
+}
+
+#[test]
+fn test_boundary_exact_remaining_amount_cancels_and_emits_event() {
+    let h = AdminSignerFixture::new();
+    let amount = 5_000_i128;
+    let trade_id = h.funded_trade(amount);
+
+    h.client().admin_clawback(&trade_id, &amount, &h.buyer);
+
+    let events = clawback_event_payloads(&h.env);
+    assert_eq!(events.len(), 1);
+    assert!(payload_has_u64(&events[0], trade_id));
+    assert_eq!(h.client().get_trade(&trade_id).status, TradeStatus::Cancelled);
+}
+
+// -----------------------------------------------------------------------------
+// Issue #298: Unauthorized-Caller Attempts
+// -----------------------------------------------------------------------------
+
+#[test]
+#[should_panic(expected = "Error(Auth, InvalidAction)")]
+fn test_unauthorized_stranger_clawback_fails_before_event() {
+    let h = AdminSignerFixture::new();
+    let amount = 4_000_i128;
+    let trade_id = h.funded_trade(amount);
+    let args = clawback_auth_args(&h.env, trade_id, amount, &h.buyer);
+
+    h.client()
+        .mock_auths(&[auth_invoke!(&h, &h.stranger, "admin_clawback", args)])
+        .admin_clawback(&trade_id, &amount, &h.buyer);
+}
+
+#[test]
+#[should_panic(expected = "Error(Auth, InvalidAction)")]
+fn test_unauthorized_seller_clawback_fails_before_event() {
+    let h = AdminSignerFixture::new();
+    let amount = 4_000_i128;
+    let trade_id = h.funded_trade(amount);
+    let args = clawback_auth_args(&h.env, trade_id, amount, &h.buyer);
+
+    h.client()
+        .mock_auths(&[auth_invoke!(&h, &h.seller, "admin_clawback", args)])
+        .admin_clawback(&trade_id, &amount, &h.buyer);
+}
+
+// -----------------------------------------------------------------------------
+// Issue #298: Repeated / Duplicate Calls
+// -----------------------------------------------------------------------------
+
+#[test]
+#[should_panic(expected = "Trade must be in Funded or Disputed status for clawback")]
+fn test_duplicate_clawback_on_cancelled_trade_fails_and_emits_no_event() {
+    let h = AdminSignerFixture::new();
+    let amount = 3_000_i128;
+    let trade_id = h.funded_trade(amount);
+
+    // First call succeeds and cancels the trade
+    h.client().admin_clawback(&trade_id, &amount, &h.buyer);
+    assert_eq!(h.client().get_trade(&trade_id).status, TradeStatus::Cancelled);
+
+    // Duplicate call must panic and not publish another clawback event
+    h.client().admin_clawback(&trade_id, &amount, &h.buyer);
 }

@@ -13,7 +13,7 @@ severity advisory that is not covered by an unexpired waiver.
 | `npm-audit (backend)` | pnpm audit | `pnpm audit --audit-level high` (via `scripts/check-audit-waivers.mjs`) | high + critical |
 | `npm-audit (frontend)` | pnpm audit | `pnpm audit --audit-level high` (via `scripts/check-audit-waivers.mjs`) | high + critical |
 | `cargo-audit (contracts)` | cargo audit | `cargo audit --json` (via `scripts/check-audit-waivers.mjs`) | high + critical + unknown |
-| `gitleaks` (`.github/workflows/secrets-scan.yml`) | Gitleaks | `gitleaks detect --config=.gitleaks.toml` | any finding (see [secrets-policy.md](secrets-policy.md)) |
+| `gitleaks` (`.github/workflows/secrets-scan.yml`) | Gitleaks | `gitleaks git --config=.gitleaks.toml` | any finding (see [secrets-policy.md](secrets-policy.md)) |
 
 `contracts` is also audited with a plain `cargo audit` in `.github/workflows/ci.yml`; the
 gate here adds the JavaScript workspaces, the waiver mechanism, and the scheduled scan.

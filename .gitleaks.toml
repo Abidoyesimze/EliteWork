@@ -13,24 +13,24 @@ disabledRules = ["generic-api-key"]
 [[allowlists]]
 description = "Example / placeholder files"
 paths = [
-  ".env.*.example",
-  ".env.example",
-  "docs/",
-  "*.md",
+  '''\.env\..*\.example$''',
+  '''(^|/)\.env\.example$''',
+  '''(^|/)docs/''',
+  '''\.md$''',
 ]
 
 [[allowlists]]
 description = "Test files — fake credentials used in test fixtures"
 paths = [
-  "backend/src/__tests__/",
-  "**/*.test.ts",
-  "**/*.spec.ts",
+  '''(^|/)backend/src/__tests__/''',
+  '''\.test\.ts$''',
+  '''\.spec\.ts$''',
 ]
 
 [[allowlists]]
 description = "Prisma migration SQL — no secrets allowed but allowlist format strings"
 paths = [
-  "backend/prisma/migrations/",
+  '''(^|/)backend/prisma/migrations/''',
 ]
 
 [[allowlists]]
@@ -45,6 +45,19 @@ description = "Test fixture literals that are not production secrets"
 regexes = [
   '''TEST_PUBLIC_KEY_FOR_MOCK''',
   '''postgresql://localhost:5432/test''',
+  '''[Jj][Ww][Tt]_[Ss][Ee][Cc][Rr][Ee][Tt]\s*=\s*["']?(your-|change-|test-)''',
+]
+
+[[allowlists]]
+description = "Local/dev placeholder credentials"
+# Match against the whole finding so connection-string and token placeholders
+# are ignored without hiding real values elsewhere in the same file.
+regexTarget = "match"
+regexes = [
+  '''postgresql://[^:@\s]+:(?:password|test|secret|staging-password)@''',
+  '''postgresql://\[\^:\]\+:\[\^@''',
+  '''SDX{54}''',
+  '''Authorization: Bearer invalid-non-admin-token''',
 ]
 
 # ── Custom rules ──────────────────────────────────────────────────────────────
@@ -52,7 +65,7 @@ regexes = [
 [[rules]]
 id          = "amana-jwt-secret"
 description = "Amana JWT_SECRET assigned a real value"
-regex       = '''[Jj][Ww][Tt]_[Ss][Ee][Cc][Rr][Ee][Tt]\s*=\s*["']?(?!your-|change-|test-)[A-Za-z0-9+/=_\-]{20,}'''
+regex       = '''[Jj][Ww][Tt]_[Ss][Ee][Cc][Rr][Ee][Tt]\s*=\s*["']?[A-Za-z0-9+/=_\-]{20,}'''
 tags        = ["secret", "jwt"]
 severity    = "critical"
 

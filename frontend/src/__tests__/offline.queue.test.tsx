@@ -1,5 +1,5 @@
 import { act } from "@testing-library/react";
-import { useOfflineQueueStore } from "@/stores/offlineQueueStore";
+import { useOfflineQueueStore, type QueuedAction } from "@/stores/offlineQueueStore";
 import { generateIdempotencyKey } from "@/lib/idempotency";
 
 describe("Offline queue — draft trades survive refresh/restart and send after reconnect", () => {
@@ -36,7 +36,7 @@ describe("Offline queue — draft trades survive refresh/restart and send after 
     });
 
     const seenKeys: string[] = [];
-    const executor = jest.fn(async (a: any) => {
+    const executor = jest.fn(async (a: QueuedAction) => {
       seenKeys.push(a.idempotencyKey);
     });
 
@@ -77,7 +77,7 @@ describe("Offline queue — draft trades survive refresh/restart and send after 
 
     // Online: replay
     useOfflineQueueStore.getState().setOnline(true);
-    const executor = jest.fn(async (a: any) => {
+    const executor = jest.fn(async (a: QueuedAction) => {
       expect(a.idempotencyKey).toBe(draft.idempotencyKey);
       // Simulate backend honoring idempotency — second call with same key would return cached response
     });
@@ -100,7 +100,7 @@ describe("Offline queue — draft trades survive refresh/restart and send after 
     const keysSent: string[] = [];
     const attemptsSeen: number[] = [];
     let calls = 0;
-    const flakyExecutor = jest.fn(async (a: any) => {
+    const flakyExecutor = jest.fn(async (a: QueuedAction) => {
       calls += 1;
       keysSent.push(a.idempotencyKey);
       attemptsSeen.push(a.attempts);
@@ -140,7 +140,7 @@ describe("Offline queue — draft trades survive refresh/restart and send after 
 
     const sent: string[] = [];
     let flakyFailuresLeft = 2;
-    const executor = jest.fn(async (a: any) => {
+    const executor = jest.fn(async (a: QueuedAction) => {
       sent.push(a.id);
       if (a.id === flaky.id && flakyFailuresLeft > 0) {
         flakyFailuresLeft -= 1;

@@ -273,21 +273,21 @@ interface VisualFixtures {
 // ---------------------------------------------------------------------------
 
 export const test = base.extend<VisualFixtures>({
-  publicPage: async ({ page }, use) => {
+  publicPage: async ({ page }, consume) => {
     await freezePageDynamics(page);
     await mockApiRoutes(page);
-    await use(page);
+    await consume(page);
   },
 
-  authenticatedPage: async ({ page }, use) => {
+  authenticatedPage: async ({ page }, consume) => {
     const token = buildJwt(FIXTURES.walletAddress);
     await freezePageDynamics(page);
     await seedAuthenticatedWallet(page, FIXTURES.walletAddress, token);
     await mockApiRoutes(page);
-    await use(page);
+    await consume(page);
   },
 
-  adminPage: async ({ page }, use) => {
+  adminPage: async ({ page }, consume) => {
     const token = buildAdminJwt(FIXTURES.walletAddress);
     await freezePageDynamics(page);
     await seedAuthenticatedWallet(page, FIXTURES.walletAddress, token);
@@ -296,7 +296,7 @@ export const test = base.extend<VisualFixtures>({
     await page.addInitScript(() => {
       window.sessionStorage.setItem('amana_is_admin', 'true');
     });
-    await use(page);
+    await consume(page);
   },
 });
 

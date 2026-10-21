@@ -1,6 +1,6 @@
 import React from "react";
 import { render, act } from "@testing-library/react";
-import { ToastProvider, useToast } from "@/hooks/useToast";
+import { ToastProvider, useToast, TOAST_CONTRACT } from "@/hooks/useToast";
 
 function Harness({ onReady }: { onReady: (api: ReturnType<typeof useToast>) => void }) {
   const api = useToast();
@@ -46,7 +46,6 @@ describe("Unified toast contract: success/error/pending w/ correlation IDs", () 
 
   it("toast inventory contains success/error/pending with correlation", () => {
     // Inventory reviewed for consistency — ensure contract has all three
-    const { TOAST_CONTRACT } = require("@/hooks/useToast");
     expect(TOAST_CONTRACT.pending).toBeDefined();
     expect(TOAST_CONTRACT.success).toBeDefined();
     expect(TOAST_CONTRACT.error).toBeDefined();

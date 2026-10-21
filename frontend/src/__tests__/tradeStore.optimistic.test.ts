@@ -29,7 +29,7 @@ describe("Optimistic store updates with snapshot-based rollback", () => {
 
     await act(async () => {
       await expect(
-        useTradeStore.getState().updateTrade("t1", { status: "SETTLED" as any }, async () => {
+        useTradeStore.getState().updateTrade("t1", { status: "SETTLED" }, async () => {
           throw new Error("Network failure mid-flight");
         }),
       ).rejects.toThrow();
@@ -43,7 +43,7 @@ describe("Optimistic store updates with snapshot-based rollback", () => {
   it("success keeps optimistic patch", async () => {
     useTradeStore.setState({ trades: [makeTrade("t1", "PENDING")], total: 1 });
     await act(async () => {
-      await useTradeStore.getState().updateTrade("t1", { status: "SETTLED" as any }, async () => {});
+      await useTradeStore.getState().updateTrade("t1", { status: "SETTLED" }, async () => {});
     });
     expect(useTradeStore.getState().trades[0].status).toBe("SETTLED");
   });
@@ -66,9 +66,9 @@ describe("Action de-duplication window preventing double-submit", () => {
     const { updateTrade } = useTradeStore.getState();
 
     // Fire three concurrent updates with same patch — dedup window should suppress 2nd/3rd
-    const p1 = updateTrade("t1", { status: "SETTLED" as any }, serverFn);
-    const p2 = updateTrade("t1", { status: "SETTLED" as any }, serverFn);
-    const p3 = updateTrade("t1", { status: "SETTLED" as any }, serverFn);
+    const p1 = updateTrade("t1", { status: "SETTLED" }, serverFn);
+    const p2 = updateTrade("t1", { status: "SETTLED" }, serverFn);
+    const p3 = updateTrade("t1", { status: "SETTLED" }, serverFn);
 
     await act(async () => {
       await Promise.allSettled([p1, p2, p3]);

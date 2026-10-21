@@ -20,6 +20,13 @@ const renderWithProvider = () => {
     );
 };
 
+// TradeProvider persists the draft to localStorage so it survives a refresh.
+// Clear it before every test so restored drafts from earlier tests cannot leak
+// into this one.
+beforeEach(() => {
+    localStorage.clear();
+});
+
 describe('Step1Details', () => {
     describe('commodity dropdown', () => {
         it('should render commodity select with default option', () => {

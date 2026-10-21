@@ -56,6 +56,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // the inline script in <head> below).
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
+    // Hydration sync from an external store (localStorage), performed exactly
+    // once on mount. The inline script in <head> has already applied the stored
+    // theme class before paint, and syncing here (after hydration) keeps the
+    // first client render identical to the server render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setThemePreference(stored ?? "system");
     // The OS theme is read from the media query, not from the stored
     // preference — a "system" preview must reflect the real device setting even

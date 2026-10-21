@@ -11,6 +11,13 @@ const renderWithProvider = () => {
     );
 };
 
+// TradeProvider persists the draft to localStorage so it survives a refresh.
+// Clear it before every test so restored drafts (slider ratio, typed notes)
+// from earlier tests cannot leak into this one.
+beforeEach(() => {
+    localStorage.clear();
+});
+
 describe('Step2Negotiation', () => {
     describe('loss ratio slider', () => {
         it('should render loss ratio slider', () => {

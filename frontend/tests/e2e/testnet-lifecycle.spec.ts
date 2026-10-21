@@ -19,6 +19,9 @@
  *   STELLAR_HORIZON_URL — Horizon API endpoint
  */
 import { test, expect } from "@playwright/test";
+import fs from "fs";
+import path from "path";
+import { execSync } from "child_process";
 
 // ── Configuration ────────────────────────────────────────────────────────────
 
@@ -105,8 +108,6 @@ describeIfTestnet("Nightly E2E Trade Lifecycle — Stellar Testnet", () => {
 
     // Step 3: Verify contract WASM is deployable
     console.log("📦 Verifying contract build artifacts...");
-    const fs = require("fs");
-    const path = require("path");
     const wasmPath = path.resolve(
       __dirname,
       "../../../contracts/amana_escrow/target/wasm32-unknown-unknown/release/amana_escrow.wasm"
@@ -123,7 +124,6 @@ describeIfTestnet("Nightly E2E Trade Lifecycle — Stellar Testnet", () => {
 
     // Step 4: Verify contract tests pass
     console.log("🧪 Running contract lifecycle unit tests...");
-    const { execSync } = require("child_process");
     try {
       const output = execSync(
         "cd contracts/amana_escrow && cargo test --locked 2>&1",
@@ -212,8 +212,6 @@ describeIfTestnet("Nightly E2E Trade Lifecycle — Stellar Testnet", () => {
   test("dispute resolution lifecycle", async () => {
     console.log("📋 Testing dispute resolution lifecycle...");
 
-    const { execSync } = require("child_process");
-
     // Run dispute-specific contract tests
     try {
       const output = execSync(
@@ -234,8 +232,6 @@ describeIfTestnet("Nightly E2E Trade Lifecycle — Stellar Testnet", () => {
   test("clawback and admin operations", async () => {
     console.log("📋 Testing clawback and admin operations...");
 
-    const { execSync } = require("child_process");
-
     try {
       const output = execSync(
         "cd contracts/amana_escrow && cargo test clawback --locked 2>&1",
@@ -254,8 +250,6 @@ describeIfTestnet("Nightly E2E Trade Lifecycle — Stellar Testnet", () => {
 
   test("fee and money-math invariants", async () => {
     console.log("📋 Testing fee and money-math invariants...");
-
-    const { execSync } = require("child_process");
 
     try {
       const output = execSync(
@@ -286,8 +280,6 @@ describeIfTestnet("Nightly E2E Trade Lifecycle — Stellar Testnet", () => {
 
   test("event emission integrity", async () => {
     console.log("📋 Testing event emission integrity...");
-
-    const { execSync } = require("child_process");
 
     try {
       const output = execSync(

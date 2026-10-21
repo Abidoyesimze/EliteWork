@@ -9,6 +9,36 @@ import { useToast } from "@/hooks/useToast";
 
 jest.mock("@/hooks/useAuth");
 jest.mock("@/hooks/useIsAdmin");
+// The real virtualizer measures the DOM, so it renders no rows under jsdom.
+// Render every stream in order instead — same approach as the audit page test.
+jest.mock("@/components/ui/VirtualizedList", () => ({
+  VirtualizedList: ({
+    items,
+    isEmpty,
+    emptyState,
+    renderItem,
+    keyExtractor,
+  }: {
+    items: { streamId: string }[];
+    isEmpty?: boolean;
+    emptyState?: React.ReactNode;
+    renderItem: (item: unknown, index: number) => React.ReactNode;
+    keyExtractor: (item: unknown, index: number) => string;
+  }) =>
+    isEmpty ? (
+      <div role="list" aria-label="Empty list">
+        {emptyState}
+      </div>
+    ) : (
+      <div role="list" aria-label="Virtualized list">
+        {items.map((item, index) => (
+          <div key={keyExtractor(item, index)} role="listitem">
+            {renderItem(item, index)}
+          </div>
+        ))}
+      </div>
+    ),
+}));
 jest.mock("@/hooks/useToast", () => ({
   useToast: jest.fn(),
 }));

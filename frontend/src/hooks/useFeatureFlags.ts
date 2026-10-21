@@ -44,11 +44,19 @@ export function useFeatureFlags(): UseFeatureFlagsResult {
 
   useEffect(() => {
     mountedRef.current = true;
-    load();
+    // Initial load fetches directly instead of going through `load`: `isLoading`
+    // already starts true, so there is no need for `load`'s synchronous
+    // setIsLoading(true) here (a cascading render). `refresh` still calls `load`
+    // from event handlers, where a synchronous update is fine.
+    void fetchServerFlags().then((serverFlags) => {
+      if (!mountedRef.current) return;
+      setFlags(serverFlags);
+      setIsLoading(false);
+    });
     return () => {
       mountedRef.current = false;
     };
-  }, [load]);
+  }, []);
 
   const isFeatureEnabled = useCallback(
     (feature: FlagName) => flags[feature],

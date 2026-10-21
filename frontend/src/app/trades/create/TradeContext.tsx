@@ -68,6 +68,10 @@ export function TradeProvider({ children }: { children: React.ReactNode }) {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
+        // Restored exactly once on mount from an external store (localStorage).
+        // Deferring to an effect keeps the first client render identical to the
+        // server render, so there is no hydration mismatch.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (parsed.step) setStep(parsed.step);
       }
     } catch {}

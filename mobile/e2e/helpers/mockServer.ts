@@ -51,7 +51,25 @@ const FIXTURE_TRADES = [
     createdAt: '2026-01-10T08:00:00.000Z',
     updatedAt: '2026-01-12T14:30:00.000Z',
   },
+  {
+    tradeId: 'TRD-E2E-0003',
+    buyerAddress: WALLET_ADDRESS,
+    sellerAddress: SELLER_ADDRESS,
+    amountUsdc: '8000',
+    amountCngn: '8000',
+    status: 'DISPUTED',
+    buyerLossBps: 5000,
+    sellerLossBps: 5000,
+    commodity: 'Rice',
+    quantity: '200',
+    unit: 'kg',
+    createdAt: '2026-01-18T10:00:00.000Z',
+    updatedAt: '2026-01-19T14:30:00.000Z',
+  },
 ];
+
+// Mutable trade state for dispute flow testing
+let tradeState = FIXTURE_TRADES.map(t => ({ ...t }));
 
 // ---------------------------------------------------------------------------
 // Request router
@@ -97,23 +115,26 @@ function handleRequest(req: http.IncomingMessage, res: http.ServerResponse): voi
     res.writeHead(200);
     res.end(
       JSON.stringify({
-        items: FIXTURE_TRADES,
-        pagination: { page: 1, limit: 20, total: 2, totalPages: 1 },
+        items: tradeState,
+        pagination: { page: 1, limit: 20, total: tradeState.length, totalPages: 1 },
       }),
     );
     return;
   }
 
-  // Single trade
+  // Single trade - TRD-E2E-0001
   if (url.match(/^\/trades\/TRD-E2E-0001/) && method === 'GET') {
+    const trade = tradeState.find(t => t.tradeId === 'TRD-E2E-0001');
     res.writeHead(200);
-    res.end(JSON.stringify(FIXTURE_TRADES[0]));
+    res.end(JSON.stringify(trade));
     return;
   }
 
+  // Single trade - TRD-E2E-0002
   if (url.match(/^\/trades\/TRD-E2E-0002/) && method === 'GET') {
+    const trade = tradeState.find(t => t.tradeId === 'TRD-E2E-0002');
     res.writeHead(200);
-    res.end(JSON.stringify(FIXTURE_TRADES[1]));
+    res.end(JSON.stringify(trade));
     return;
   }
 
@@ -145,6 +166,60 @@ function handleRequest(req: http.IncomingMessage, res: http.ServerResponse): voi
     return;
   }
 
+  // Single trade - TRD-E2E-0003 (DISPUTED)
+  if (url.match(/^\/trades\/TRD-E2E-0003/) && method === 'GET') {
+    const trade = tradeState.find(t => t.tradeId === 'TRD-E2E-0003');
+    res.writeHead(200);
+    res.end(JSON.stringify(trade));
+    return;
+  }
+
+  // Initiate dispute - POST /trades/:tradeId/dispute
+  const disputeMatch = url.match(/^\/trades\/(TRD-E2E-\d+)\/dispute$/);
+  if (disputeMatch && method === 'POST') {
+    const tradeId = disputeMatch[1];
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        JSON.parse(body); // Validate JSON body
+        const trade = tradeState.find(t => t.tradeId === tradeId);
+        if (trade) {
+          trade.status = 'DISPUTED';
+          trade.updatedAt = new Date().toISOString();
+          res.writeHead(200);
+          res.end(JSON.stringify(trade));
+        } else {
+          res.writeHead(404);
+          res.end(JSON.stringify({ error: 'Trade not found' }));
+        }
+      } catch {
+        res.writeHead(400);
+        res.end(JSON.stringify({ error: 'Invalid request body' }));
+      }
+    });
+    return;
+  }
+
+  // Upload evidence - POST /trades/:tradeId/evidence
+  const evidenceMatch = url.match(/^\/trades\/(TRD-E2E-\d+)\/evidence$/);
+  if (evidenceMatch && method === 'POST') {
+    // const tradeId = evidenceMatch[1]; // Not used but kept for clarity
+    // Check for force error flag in launch args (simulated via header for simplicity)
+    const forceError = req.headers['x-force-upload-error'] === 'true';
+    
+    if (forceError) {
+      res.writeHead(500);
+      res.end(JSON.stringify({ error: 'Upload failed: simulated error' }));
+      return;
+    }
+    
+    // Simulate successful upload
+    res.writeHead(200);
+    res.end(JSON.stringify({ success: true, cid: 'QmEvidenceCID123' }));
+    return;
+  }
+
   // Default 200 fallback — prevents the app from crashing on unknown routes.
   res.writeHead(200);
   res.end(JSON.stringify({}));
@@ -159,12 +234,21 @@ function buildJwt(address: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// Test helpers
+// ---------------------------------------------------------------------------
+
+export function resetTradeState(): void {
+  tradeState = FIXTURE_TRADES.map(t => ({ ...t }));
+}
+
+// ---------------------------------------------------------------------------
 // Server lifecycle
 // ---------------------------------------------------------------------------
 
 let server: http.Server | null = null;
 
 export async function startMockServer(): Promise<void> {
+  resetTradeState();
   return new Promise((resolve, reject) => {
     server = http.createServer(handleRequest);
     server.listen(MOCK_PORT, '127.0.0.1', () => {

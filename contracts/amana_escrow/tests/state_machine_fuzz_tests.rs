@@ -241,7 +241,7 @@ fn prop_resolve_dispute_fuzz(
     let mediator = Address::generate(&fe.env);
 
     client.set_mediator(&mediator);
-    token::StellarAssetClient::new(&fe.env, &fe.usdc_id).mint(&buyer, &(amount * 2));
+    token::StellarAssetClient::new(&fe.env, &fe.usdc_id).mint(&buyer, &amount);
 
     let trade_id = client.create_trade(&buyer, &seller, &amount, &5000, &5000, &None);
     client.deposit(&trade_id);
@@ -251,13 +251,14 @@ fn prop_resolve_dispute_fuzz(
     let tok = token::Client::new(&fe.env, &fe.usdc_id);
     let seller_bal = tok.balance(&seller);
     let buyer_bal = tok.balance(&buyer);
-    let treasury_bal = tok.balance(&fe.treasury);
-
+    // The platform fee is accrued in contract storage and stays
+    // in the escrow until the admin withdraws it, so the
+    // conserved amount is seller + buyer + escrow balance.
+    let escrow_bal = tok.balance(&fe.contract_id);
     TestResult::from_bool(
         seller_bal >= 0
             && buyer_bal >= 0
-            && treasury_bal >= 0
-            && seller_bal + buyer_bal + treasury_bal == amount,
+            && seller_bal + buyer_bal + escrow_bal == amount,
     )
 }
 
@@ -298,7 +299,7 @@ fn prop_boundary_fuzz(raw_amount_seed: u64, raw_fee_bps: u32) -> TestResult {
     let mediator = Address::generate(&fe.env);
 
     client.set_mediator(&mediator);
-    token::StellarAssetClient::new(&fe.env, &fe.usdc_id).mint(&buyer, &(amount * 2));
+    token::StellarAssetClient::new(&fe.env, &fe.usdc_id).mint(&buyer, &amount);
 
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         client.create_trade(&buyer, &seller, &amount, &5000, &5000, &None)
@@ -320,9 +321,12 @@ fn prop_boundary_fuzz(raw_amount_seed: u64, raw_fee_bps: u32) -> TestResult {
                     let tok = token::Client::new(&fe.env, &fe.usdc_id);
                     let s = tok.balance(&seller);
                     let b = tok.balance(&buyer);
-                    let f = tok.balance(&fe.treasury);
+                    // The platform fee is accrued in contract storage and stays
+                    // in the escrow until the admin withdraws it, so the
+                    // conserved amount is seller + buyer + escrow balance.
+                    let escrow = tok.balance(&fe.contract_id);
                     assert_eq!(
-                        s + b + f,
+                        s + b + escrow,
                         amount,
                         "conservation violated for amount={amount}"
                     );

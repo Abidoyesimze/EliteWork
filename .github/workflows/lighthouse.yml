@@ -1,0 +1,96 @@
+name: Lighthouse — Critical Pages
+
+# Lighthouse CI (performance + accessibility) for the critical user path:
+#   /trades/create — trade creation (highest-traffic authenticated page)
+#   /dashboard     — trade stats and recent trades overview
+#   /vault         — escrow vault overview
+#
+# Every page has its own config with its own thresholds and baseline
+# numbers: frontend/lighthouserc.<page>.json. The measured baselines live in
+# docs/lighthouse-critical-pages.md.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "frontend/**"
+      - ".github/workflows/lighthouse.yml"
+      - "scripts/lighthouse-summary.mjs"
+  push:
+    branches:
+      - main
+    paths:
+      - "frontend/**"
+      - ".github/workflows/lighthouse.yml"
+      - "scripts/lighthouse-summary.mjs"
+
+concurrency:
+  group: lighthouse-critical-pages-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse:
+    name: Lighthouse critical pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      # Each page is measured independently, but a regression on one page must
+      # not hide the results of the others — so every config runs and the step
+      # fails at the end if any budget was breached.
+      - name: Run Lighthouse CI (critical pages)
+        run: |
+          set +e
+          status=0
+          for page in trades-create dashboard vault; do
+            echo "::group::Lighthouse ${page}"
+            npx --yes @lhci/cli@0.15.1 autorun --config=./lighthouserc.${page}.json
+            code=$?
+            echo "::endgroup::"
+            if [ "$code" -ne 0 ]; then
+              echo "Lighthouse budget breached on ${page} (exit ${code})."
+              status=1
+            fi
+          done
+          exit "$status"
+
+      - name: Write scores to job summary
+        if: always()
+        run: |
+          node ../scripts/lighthouse-summary.mjs \
+            --dir .lighthouseci \
+            --page trades-create:/trades/create \
+            --page dashboard:/dashboard \
+            --page vault:/vault
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-critical-pages
+          path: frontend/.lighthouseci/
+          retention-days: 14

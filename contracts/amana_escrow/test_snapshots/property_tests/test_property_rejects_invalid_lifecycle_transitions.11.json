@@ -44,7 +44,7 @@
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK3IM"
                 },
                 {
-                  "u32": 3282
+                  "u32": 7689
                 },
                 {
                   "address": "CACMVW2KK4H5FZDFF2AUCAKQTEJMZZWJUIZF23XMRVYQBSXYLHZ6BKWN"
@@ -69,7 +69,7 @@
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
                 },
                 {
-                  "i128": "55415"
+                  "i128": "3459"
                 }
               ]
             }
@@ -94,13 +94,13 @@
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
                 },
                 {
-                  "i128": "55415"
+                  "i128": "3459"
                 },
                 {
-                  "u32": 2323
+                  "u32": 5194
                 },
                 {
-                  "u32": 7677
+                  "u32": 4806
                 },
                 "void"
               ]
@@ -139,7 +139,7 @@
                       "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM"
                     },
                     {
-                      "i128": "55415"
+                      "i128": "3459"
                     }
                   ]
                 }
@@ -210,7 +210,7 @@
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOLZM"
                 },
                 {
-                  "u32": 4265
+                  "u32": 0
                 }
               ]
             }
@@ -479,7 +479,7 @@
                           "symbol": "amount"
                         },
                         "val": {
-                          "i128": "55415"
+                          "i128": "3459"
                         }
                       },
                       {
@@ -495,7 +495,7 @@
                           "symbol": "buyer_loss_bps"
                         },
                         "val": {
-                          "u32": 2323
+                          "u32": 5194
                         }
                       },
                       {
@@ -539,7 +539,7 @@
                           "symbol": "seller_loss_bps"
                         },
                         "val": {
-                          "u32": 7677
+                          "u32": 4806
                         }
                       },
                       {
@@ -679,6 +679,78 @@
                         }
                       }
                     ]
+                  },
+                  {
+                    "map": [
+                      {
+                        "key": {
+                          "symbol": "actor"
+                        },
+                        "val": {
+                          "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "data"
+                        },
+                        "val": {
+                          "string": "dispute initiated"
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "event_type"
+                        },
+                        "val": {
+                          "string": "disputed"
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "timestamp"
+                        },
+                        "val": {
+                          "u64": "0"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "map": [
+                      {
+                        "key": {
+                          "symbol": "actor"
+                        },
+                        "val": {
+                          "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOLZM"
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "data"
+                        },
+                        "val": {
+                          "string": "dispute resolved"
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "event_type"
+                        },
+                        "val": {
+                          "string": "resolved"
+                        }
+                      },
+                      {
+                        "key": {
+                          "symbol": "timestamp"
+                        },
+                        "val": {
+                          "u64": "0"
+                        }
+                      }
+                    ]
                   }
                 ]
               }
@@ -720,7 +792,7 @@
                         ]
                       },
                       "val": {
-                        "i128": "10180"
+                        "i128": "1381"
                       }
                     },
                     {
@@ -756,7 +828,7 @@
                         ]
                       },
                       "val": {
-                        "u32": 3282
+                        "u32": 7689
                       }
                     },
                     {
@@ -1070,7 +1142,7 @@
                       "symbol": "amount"
                     },
                     "val": {
-                      "i128": "10180"
+                      "i128": "1381"
                     }
                   },
                   {
@@ -1122,7 +1194,7 @@
                       "symbol": "amount"
                     },
                     "val": {
-                      "i128": "24397"
+                      "i128": "1662"
                     }
                   },
                   {
@@ -1174,7 +1246,7 @@
                       "symbol": "amount"
                     },
                     "val": {
-                      "i128": "20838"
+                      "i128": "416"
                     }
                   },
                   {

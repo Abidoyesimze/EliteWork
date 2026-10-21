@@ -186,7 +186,7 @@
     },
     {
       "id": 10,
-      "title": "SLO burn rate (current)",
+      "title": "SLO burn rate (current 6h)",
       "description": "Error-budget burn rate over the 6h slow-burn window per SLO. Crossing ~9.3x (>3-day budget exhaustion) => ticket. Crossing 1200x on the 1h window => page. Source: infra/prometheus/slo-alerting-rules.yml.",
       "type": "timeseries",
       "datasource": "${datasource}",

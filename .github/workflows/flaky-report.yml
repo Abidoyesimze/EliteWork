@@ -71,6 +71,18 @@ jobs:
             --registry .github/flaky-tests-quarantine.json \
             --weekly-output reports/flake/weekly-summary.md
 
+      # Re-promotion rule (docs/flaky-tests-policy.md §4/§7): a quarantined
+      # test that ran clean all week no longer needs a quarantine entry. The
+      # reporter exits 2 when such an entry exists, which fails this job until
+      # the entry is removed (or extended with a justification).
+      - name: Enforce re-promotion of fixed quarantines
+        run: |
+          node scripts/flake-reporter.mjs \
+            --report-dir reports/flake/ci-runs \
+            --registry .github/flaky-tests-quarantine.json \
+            --weekly-output reports/flake/weekly-summary.md \
+            --fail-on-repromotion
+
       - name: Post summary to GitHub step summary
         if: always()
         run: |

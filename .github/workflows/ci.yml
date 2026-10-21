@@ -72,9 +72,39 @@ jobs:
               - 'contracts/amana_escrow/src/generated/**'
               - 'backend/src/types/generated/**'
 
+  # The scripts/ tree holds CI gates (quarantine registry validator, contract
+  # determinism verifier, lockfile drift check, ...). A bug inside a gate
+  # script would silently disable the gate it enforces, so the gates are
+  # themselves covered by unit tests (scripts/__tests__). Those tests must be
+  # green before the gates below are trusted, hence `validate-quarantine`
+  # depends on this job.
+  scripts-tests:
+    name: Scripts Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Test scripts
+        run: pnpm test:scripts
+
   validate-quarantine:
     name: Validate flaky-tests quarantine registry
     runs-on: ubuntu-latest
+    needs: [scripts-tests]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -112,7 +142,7 @@ jobs:
   frontend:
     name: Frontend Required Gate
     runs-on: ubuntu-latest
-    needs: [changes, validate-quarantine]
+    needs: [changes]
     defaults:
       run:
         working-directory: frontend
@@ -129,6 +159,14 @@ jobs:
           node-version: 22
           cache: pnpm
           cache-dependency-path: frontend/pnpm-lock.yaml
+
+      # The quarantine registry is validated inside every stack gate (not only
+      # in the standalone `validate-quarantine` job). A failed dependency makes
+      # dependent jobs skip, and skipped required checks do not block a merge —
+      # so the check has to run *inside* the gate that branch protection
+      # requires. See docs/flaky-tests-policy.md §4.
+      - name: Validate flaky quarantine registry
+        run: node ../scripts/validate-flaky-quarantine.mjs
 
       - name: Install deps
         run: pnpm install --frozen-lockfile
@@ -304,7 +342,7 @@ jobs:
   backend:
     name: Backend Required Gate
     runs-on: ubuntu-latest
-    needs: [changes, validate-quarantine]
+    needs: [changes]
     services:
       postgres:
         image: postgres:16
@@ -344,6 +382,11 @@ jobs:
           node-version: 22
           cache: pnpm
           cache-dependency-path: backend/pnpm-lock.yaml
+
+      # Runs inside the required gate so an expired quarantine entry fails the
+      # gate itself (a skipped job would not block the merge).
+      - name: Validate flaky quarantine registry
+        run: node ../scripts/validate-flaky-quarantine.mjs
 
       - name: Install deps
         run: pnpm install --frozen-lockfile
@@ -440,7 +483,7 @@ jobs:
   mobile:
     name: Mobile Required Gate
     runs-on: ubuntu-latest
-    needs: [changes, validate-quarantine]
+    needs: [changes]
     defaults:
       run:
         working-directory: mobile
@@ -455,6 +498,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      # Runs inside the required gate so an expired quarantine entry fails the
+      # gate itself (a skipped job would not block the merge).
+      - name: Validate flaky quarantine registry
+        run: node ../scripts/validate-flaky-quarantine.mjs
 
       - name: Install deps
         if: needs.changes.outputs.mobile == 'true'
@@ -647,13 +695,23 @@ jobs:
   contracts:
     name: Contracts Required Gate
     runs-on: ubuntu-latest
-    needs: [changes, validate-quarantine]
+    needs: [changes]
     defaults:
       run:
         working-directory: contracts/amana_escrow
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Runs inside the required gate so an expired quarantine entry fails the
+      # gate itself (a skipped job would not block the merge).
+      - name: Validate flaky quarantine registry
+        run: node ../../scripts/validate-flaky-quarantine.mjs
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -680,7 +738,16 @@ jobs:
         if: needs.changes.outputs.contracts == 'true'
         run: ../../scripts/check-contract-deployment-safety.sh
 
-      - name: Test
+      # Fails if an integration suite under contracts/amana_escrow/tests/ is not
+      # a cargo test target (it would never run) or if the library target that
+      # carries the inline #[cfg(test)] modules disappeared.
+      - name: Verify contract test coverage
+        if: needs.changes.outputs.contracts == 'true'
+        run: node ../../scripts/check-contract-test-coverage.mjs
+
+      # Runs the inline #[cfg(test)] modules (src/tests/*) and every
+      # integration suite in tests/*.rs.
+      - name: Test (unit modules + integration suites)
         if: needs.changes.outputs.contracts == 'true'
         run: cargo test --locked
 

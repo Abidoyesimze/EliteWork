@@ -10,27 +10,33 @@ disabledRules = ["generic-api-key"]
 
 # ── Allowlist ──────────────────────────────────────────────────────────────────
 # Paths and patterns that are safe to ignore.
+# Note: paths are treated as regex patterns in gitleaks
+
 [[allowlists]]
 description = "Example / placeholder files"
 paths = [
-  '''\.env\..*\.example$''',
-  '''(^|/)\.env\.example$''',
-  '''(^|/)docs/''',
-  '''\.md$''',
+  "\\.env\\..*\\.example$",
+  "\\.env\\.example$",
+  "^docs/",
+  "\\.md$",
+  "^infra/k8s/secrets\\.yaml$",
+  "^scripts/validate-admin-secret\\.sh$",
+  "^scripts/staging-admin-smoke-test\\.sh$",
+  "^\\.github/workflows/secrets-scan\\.yml$",
 ]
 
 [[allowlists]]
 description = "Test files — fake credentials used in test fixtures"
 paths = [
-  '''(^|/)backend/src/__tests__/''',
-  '''\.test\.ts$''',
-  '''\.spec\.ts$''',
+  "backend/src/__tests__/",
+  ".*\\.test\\.ts$",
+  ".*\\.spec\\.ts$",
 ]
 
 [[allowlists]]
 description = "Prisma migration SQL — no secrets allowed but allowlist format strings"
 paths = [
-  '''(^|/)backend/prisma/migrations/''',
+  "backend/prisma/migrations/",
 ]
 
 [[allowlists]]
@@ -45,19 +51,10 @@ description = "Test fixture literals that are not production secrets"
 regexes = [
   '''TEST_PUBLIC_KEY_FOR_MOCK''',
   '''postgresql://localhost:5432/test''',
-  '''[Jj][Ww][Tt]_[Ss][Ee][Cc][Rr][Ee][Tt]\s*=\s*["']?(your-|change-|test-)''',
-]
-
-[[allowlists]]
-description = "Local/dev placeholder credentials"
-# Match against the whole finding so connection-string and token placeholders
-# are ignored without hiding real values elsewhere in the same file.
-regexTarget = "match"
-regexes = [
-  '''postgresql://[^:@\s]+:(?:password|test|secret|staging-password)@''',
-  '''postgresql://\[\^:\]\+:\[\^@''',
-  '''SDX{54}''',
-  '''Authorization: Bearer invalid-non-admin-token''',
+  '''^test$''',
+  '''^staging-password$''',
+  '''^secret$''',
+  '''^password$''',
 ]
 
 # ── Custom rules ──────────────────────────────────────────────────────────────

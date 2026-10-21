@@ -101,7 +101,6 @@ lint_rust() {
 lint_js_project "frontend"
 lint_js_project "backend"
 lint_js_project "mobile"
-lint_js_project "routes-d"
 lint_rust
 
 if ((LINT_FAILED != 0)); then

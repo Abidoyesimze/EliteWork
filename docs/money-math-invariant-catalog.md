@@ -24,8 +24,8 @@ identical JSON fixture file to guarantee cross-language parity.
 **Category:** Fee calculation
 **Owning test files:**
 - Rust: `contracts/amana_escrow/src/tests/bps_fuzz_tests.rs` (`prop_release_funds_conservation`)
-- Rust parity: `contracts/amana_escrow/tests/parity_money_math.rs`
-- TS parity: `shared-test-fixtures/__tests__/money_math_parity.test.ts`
+- Rust parity (CI-enforced): `contracts/amana_escrow/tests/parity_money_math.rs` (`release_funds_conservation_parity`, run by `money-math-parity.yml`)
+- TS parity (CI-enforced): `shared-test-fixtures/__tests__/money_math_parity.test.ts` (run by `money-math-parity.yml`)
 
 **Invariant:**
 ```
@@ -49,7 +49,7 @@ receives `fee = amount * fee_bps / 10_000`.
 **Category:** Fee calculation
 **Owning test files:**
 - Rust: `contracts/amana_escrow/src/tests/bps_fuzz_tests.rs` (`prop_fee_amount_non_negative`)
-- Parity: Same as INV-001
+- Parity (CI-enforced): `contracts/amana_escrow/tests/parity_money_math.rs` (`fee_boundary_parity`, `fee_generated_parity`, run by `money-math-parity.yml`) — asserts `fee >= 0`
 
 **Invariant:**
 ```
@@ -66,7 +66,7 @@ input amount or fee rate.
 **Category:** Fee calculation
 **Owning test files:**
 - Rust: `contracts/amana_escrow/src/tests/bps_fuzz_tests.rs` (`prop_fee_amount_le_amount`)
-- Parity: Same as INV-001
+- Parity (CI-enforced): `contracts/amana_escrow/tests/parity_money_math.rs` (`fee_boundary_parity`, `fee_generated_parity`, run by `money-math-parity.yml`) — asserts `fee <= amount`
 
 **Invariant:**
 ```
@@ -82,8 +82,8 @@ fee <= amount for all valid inputs
 **Category:** Dispute resolution
 **Owning test files:**
 - Rust: `contracts/amana_escrow/src/tests/bps_fuzz_tests.rs` (`prop_resolve_dispute_conservation`)
-- Rust parity: `contracts/amana_escrow/tests/parity_money_math.rs`
-- TS parity: `shared-test-fixtures/__tests__/money_math_parity.test.ts`
+- Rust parity (CI-enforced): `contracts/amana_escrow/tests/parity_money_math.rs` (`resolve_dispute_conservation_parity`, run by `money-math-parity.yml`)
+- TS parity (CI-enforced): `shared-test-fixtures/__tests__/money_math_parity.test.ts` (run by `money-math-parity.yml`)
 
 **Invariant:**
 ```
@@ -109,7 +109,7 @@ the buyer's refund, and the platform fee.
 **Category:** Dispute resolution
 **Owning test files:**
 - Rust: `contracts/amana_escrow/src/tests/bps_fuzz_tests.rs` (`prop_resolve_dispute_seller_net_non_negative`, `prop_resolve_dispute_buyer_refund_non_negative`)
-- Parity: Same as INV-004
+- Parity (CI-enforced): Same as INV-004 — asserts `seller_net >= 0`, `buyer_refund >= 0`, `fee >= 0`
 
 **Invariant:**
 ```
@@ -123,7 +123,7 @@ seller_net >= 0 AND buyer_refund >= 0 AND fee >= 0
 **Category:** Loss sharing
 **Owning test files:**
 - Rust: `contracts/amana_escrow/src/tests/bps_fuzz_tests.rs` (`prop_loss_amount_non_negative`)
-- Parity: Same as INV-001
+- Parity (CI-enforced): `contracts/amana_escrow/tests/parity_money_math.rs` (`loss_boundary_parity`, run by `money-math-parity.yml`) — asserts `loss >= 0`
 
 **Invariant:**
 ```
@@ -137,7 +137,7 @@ loss >= 0 for all valid inputs
 **Category:** Loss sharing
 **Owning test files:**
 - Rust: `contracts/amana_escrow/src/tests/bps_fuzz_tests.rs` (`prop_loss_amount_le_total`)
-- Parity: Same as INV-001
+- Parity (CI-enforced): `contracts/amana_escrow/tests/parity_money_math.rs` (`loss_boundary_parity`, run by `money-math-parity.yml`) — asserts `loss <= total`
 
 **Invariant:**
 ```
@@ -150,8 +150,8 @@ loss <= total for all valid inputs
 
 **Category:** Admin clawback
 **Owning test files:**
-- Rust parity: `contracts/amana_escrow/tests/parity_money_math.rs`
-- TS parity: `shared-test-fixtures/__tests__/money_math_parity.test.ts`
+- Rust parity (CI-enforced): `contracts/amana_escrow/tests/parity_money_math.rs` (`clawback_conservation_parity`, run by `money-math-parity.yml`)
+- TS parity (CI-enforced): `shared-test-fixtures/__tests__/money_math_parity.test.ts` (run by `money-math-parity.yml`)
 - Additional: `contracts/amana_escrow/tests/clawback_invariant_tests.rs`
 
 **Invariant:**
@@ -212,3 +212,28 @@ The cross-language parity job runs in `.github/workflows/money-math-parity.yml`:
 - Runs Rust `cargo test parity_money_math`
 - Runs TypeScript `jest money_math_parity`
 - Fails if either stack diverges from the expected corpus values
+
+### CI coverage of catalog invariants
+
+Every invariant in this catalog is asserted by at least one test executed by
+`money-math-parity.yml` (Rust `parity_money_math.rs` and/or TypeScript
+`money_math_parity.test.ts`):
+
+| Invariant | Invariant expression | Asserted in CI by |
+|---|---|---|
+| INV-001 | `seller_amount + fee_amount == amount` | `release_funds_conservation_parity` (Rust) + TS release-funds test |
+| INV-002 | `fee >= 0` | `fee_boundary_parity` / `fee_generated_parity` (Rust) |
+| INV-003 | `fee <= amount` | `fee_boundary_parity` / `fee_generated_parity` (Rust) |
+| INV-004 | `seller_net + buyer_refund + fee == total` | `resolve_dispute_conservation_parity` (Rust) + TS dispute test |
+| INV-005 | `seller_net >= 0 AND buyer_refund >= 0 AND fee >= 0` | `resolve_dispute_conservation_parity` (Rust) + TS dispute test |
+| INV-006 | `loss >= 0` | `loss_boundary_parity` (Rust) |
+| INV-007 | `loss <= total` | `loss_boundary_parity` (Rust) |
+| INV-008 | `remaining + clawback_amount == trade_amount` | `clawback_conservation_parity` (Rust) + TS clawback test |
+
+**Gap history (closed in this revision):** INV-002, INV-003, INV-006 and
+INV-007 were owned by `bps_fuzz_tests.rs` only, which is not part of the CI
+test filter (`cargo test parity_money_math`). Explicit `assert!` checks for
+those four invariants were added to `contracts/amana_escrow/tests/parity_money_math.rs`
+so they are now enforced by CI, and
+`docs/money-math-invariant-catalog.md` was added to the workflow's
+`paths` trigger so future catalog changes re-run the parity job.

@@ -151,6 +151,18 @@ fn fee_boundary_parity() {
             "Seller amount mismatch at case #{}",
             case.id
         );
+        // INV-002: fee >= 0 for all valid inputs
+        assert!(
+            rust_fee >= 0,
+            "INV-002 violated at case #{}: fee={} is negative",
+            case.id, rust_fee
+        );
+        // INV-003: fee <= amount for all valid inputs
+        assert!(
+            rust_fee <= case.amount,
+            "INV-003 violated at case #{}: fee={} > amount={}",
+            case.id, rust_fee, case.amount
+        );
     }
 }
 
@@ -165,6 +177,18 @@ fn fee_generated_parity() {
             "Fee mismatch at case #{}: amount={}, bps={}, rust={}, expected={}",
             case.id, case.amount, case.fee_bps, rust_fee, case.expected_fee
         );
+        // INV-002: fee >= 0 for all valid inputs
+        assert!(
+            rust_fee >= 0,
+            "INV-002 violated at case #{}: fee={} is negative",
+            case.id, rust_fee
+        );
+        // INV-003: fee <= amount for all valid inputs
+        assert!(
+            rust_fee <= case.amount,
+            "INV-003 violated at case #{}: fee={} > amount={}",
+            case.id, rust_fee, case.amount
+        );
     }
 }
 
@@ -178,6 +202,18 @@ fn loss_boundary_parity() {
             rust_loss, case.expected_loss,
             "Loss mismatch at case #{}: total={}, loss_bps={}, sl_bps={}, rust={}, expected={}",
             case.id, case.total, case.loss_bps, case.seller_loss_bps, rust_loss, case.expected_loss
+        );
+        // INV-006: loss >= 0 for all valid inputs
+        assert!(
+            rust_loss >= 0,
+            "INV-006 violated at case #{}: loss={} is negative",
+            case.id, rust_loss
+        );
+        // INV-007: loss <= total for all valid inputs
+        assert!(
+            rust_loss <= case.total,
+            "INV-007 violated at case #{}: loss={} > total={}",
+            case.id, rust_loss, case.total
         );
     }
 }

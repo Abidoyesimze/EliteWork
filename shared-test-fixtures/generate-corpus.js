@@ -56,13 +56,25 @@ function validBps() {
 }
 
 // ── Money Math Functions (mirrors Rust lib.rs) ───────────────────────────────
+//
+// The Rust contract does this arithmetic in exact 128-bit integers. JavaScript
+// numbers are IEEE-754 doubles, so `amount * feeBps` silently loses precision
+// once the product exceeds 2^53 (amounts are generated up to 1e15, i.e. a
+// product up to 1e19). A corpus built from doubles therefore disagrees with
+// the contract on the very cases it is supposed to pin down, so every money
+// value is computed with BigInt here and converted back to a Number only when
+// it is serialised (all results are <= 1e15, which a double represents
+// exactly).
+var BPS_DIVISOR_BIG = BigInt(BPS_DIVISOR);
+
 function feeAmount(amount, feeBps) {
-  return Math.floor((amount * feeBps) / BPS_DIVISOR);
+  return (BigInt(amount) * BigInt(feeBps)) / BPS_DIVISOR_BIG;
 }
 
 function lossAmount(total, lossBps, sellerLossBps) {
-  return Math.floor(
-    (total * lossBps * sellerLossBps) / (BPS_DIVISOR * BPS_DIVISOR)
+  return (
+    (BigInt(total) * BigInt(lossBps) * BigInt(sellerLossBps)) /
+    (BPS_DIVISOR_BIG * BPS_DIVISOR_BIG)
   );
 }
 
@@ -79,8 +91,8 @@ amounts.forEach(function (amount) {
       id: id++,
       amount: amount,
       fee_bps: bps,
-      expected_fee: fee,
-      expected_seller_amount: amount - fee,
+      expected_fee: Number(fee),
+      expected_seller_amount: Number(BigInt(amount) - fee),
     });
   });
 });
@@ -95,7 +107,7 @@ amounts.forEach(function (total) {
         total: total,
         loss_bps: lossBps,
         seller_loss_bps: slBps,
-        expected_loss: lossAmount(total, lossBps, slBps),
+        expected_loss: Number(lossAmount(total, lossBps, slBps)),
       });
     });
   });
@@ -112,8 +124,8 @@ for (var i = 0; i < generatedCases; i++) {
     id: id++,
     amount: amount,
     fee_bps: bps,
-    expected_fee: fee,
-    expected_seller_amount: amount - fee,
+    expected_fee: Number(fee),
+    expected_seller_amount: Number(BigInt(amount) - fee),
   });
 }
 
@@ -123,14 +135,14 @@ for (var i = 0; i < generatedCases; i++) {
   var amount = validAmount();
   var bps = validBps();
   var fee = feeAmount(amount, bps);
-  var seller = amount - fee;
+  var seller = BigInt(amount) - fee;
   generatedReleaseCases.push({
     id: id++,
     amount: amount,
     fee_bps: bps,
-    seller_amount: seller,
-    fee_amount: fee,
-    sum_equals_amount: seller + fee === amount,
+    seller_amount: Number(seller),
+    fee_amount: Number(fee),
+    sum_equals_amount: seller + fee === BigInt(amount),
   });
 }
 
@@ -145,8 +157,8 @@ for (var i = 0; i < generatedCases; i++) {
 
   var lossBps = BPS_DIVISOR - sellerGetsBps;
   var sellerLoss = lossAmount(total, lossBps, sellerLossBps);
-  var sellerRaw = total - sellerLoss;
-  var buyerRefund = total - sellerRaw;
+  var sellerRaw = BigInt(total) - sellerLoss;
+  var buyerRefund = BigInt(total) - sellerRaw;
   var fee = feeAmount(sellerRaw, feeBps);
   var sellerNet = sellerRaw - fee;
 
@@ -157,14 +169,14 @@ for (var i = 0; i < generatedCases; i++) {
     buyer_loss_bps: buyerLossBps,
     seller_loss_bps: sellerLossBps,
     fee_bps: feeBps,
-    seller_loss: sellerLoss,
-    seller_raw: sellerRaw,
-    buyer_refund: buyerRefund,
-    fee: fee,
-    seller_net: sellerNet,
-    sum_equals_total: sellerNet + buyerRefund + fee === total,
+    seller_loss: Number(sellerLoss),
+    seller_raw: Number(sellerRaw),
+    buyer_refund: Number(buyerRefund),
+    fee: Number(fee),
+    seller_net: Number(sellerNet),
+    sum_equals_total: sellerNet + buyerRefund + fee === BigInt(total),
     all_non_negative:
-      sellerNet >= 0 && buyerRefund >= 0 && fee >= 0 && sellerLoss >= 0,
+      sellerNet >= 0n && buyerRefund >= 0n && fee >= 0n && sellerLoss >= 0n,
   });
 }
 

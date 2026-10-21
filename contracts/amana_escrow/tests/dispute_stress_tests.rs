@@ -408,8 +408,20 @@ fn test_stress_settlement_invariants_after_interleaved_ops() {
         amount,
         "[#389] settlement conservation violated"
     );
-    // Escrow must be fully drained
-    assert_eq!(escrow_bal, 0, "[#389] escrow not empty after settlement");
+    // The platform fee is not paid out during settlement — it is accrued in
+    // contract storage (`AccruedFees`) and stays in the escrow until the admin
+    // withdraws it, so the escrow still holds exactly the accrued fee.
+    // 500_000 * 20% loss * 50% seller share = 50_000 loss
+    // => seller_raw = 450_000, fee = 450_000 * 100bps = 4_500.
+    let accrued = s.client().get_accrued_fees();
+    assert_eq!(
+        accrued, 4_500,
+        "[#389] accrued platform fee mismatch after settlement"
+    );
+    assert_eq!(
+        escrow_bal, accrued,
+        "[#389] escrow does not hold exactly the accrued platform fee"
+    );
     // Non-negativity
     assert!(seller_bal >= 0 && buyer_bal >= 0 && treasury_bal >= 0);
     // Trade is Completed
@@ -417,6 +429,13 @@ fn test_stress_settlement_invariants_after_interleaved_ops() {
         s.client().get_trade(&tid).status,
         TradeStatus::Completed
     ));
+    // Withdrawing the accrued fee drains the escrow completely.
+    s.client().withdraw_fees(&accrued, &s.treasury);
+    assert_eq!(
+        s.tok().balance(&s.contract_id),
+        0,
+        "[#389] escrow not empty after fee withdrawal"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -448,13 +467,23 @@ fn test_stress_repeated_evidence_does_not_affect_settlement() {
     let seller_bal = s.tok().balance(&s.seller);
     let buyer_bal = s.tok().balance(&s.buyer);
     let treasury_bal = s.tok().balance(&s.treasury);
+    let escrow_bal = s.tok().balance(&s.contract_id);
 
+    // The accrued platform fee is still parked in the escrow (it is only
+    // moved out by `withdraw_fees`), so it has to be part of the conserved
+    // amount. 10_000 * 50% loss * 50% seller share = 2_500 loss
+    // => seller_raw = 7_500, fee = 7_500 * 100bps = 75.
+    let accrued = s.client().get_accrued_fees();
+    assert_eq!(accrued, 75, "[#389] accrued platform fee mismatch");
     assert_eq!(
-        seller_bal + buyer_bal + treasury_bal,
+        seller_bal + buyer_bal + treasury_bal + escrow_bal,
         amount,
         "[#389] settlement affected by evidence count"
     );
-    assert_eq!(s.tok().balance(&s.contract_id), 0);
+    assert_eq!(
+        escrow_bal, accrued,
+        "[#389] escrow does not hold exactly the accrued platform fee"
+    );
 }
 
 // ---------------------------------------------------------------------------

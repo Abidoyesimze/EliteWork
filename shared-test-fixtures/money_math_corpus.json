@@ -7,7 +7,7 @@
     "seed": 42,
     "generated_cases": 1000,
     "bps_divisor": 10000,
-    "timestamp": "2026-08-30T14:58:03.789Z"
+    "timestamp": "2026-10-20T01:57:40.513Z"
   },
   "invariants": [
     "release_funds_conservation: seller_amount + fee_amount == amount",
@@ -475,8 +475,8 @@
         "id": 22,
         "amount": 738621372729540,
         "fee_bps": 8587,
-        "expected_fee": 634254172762856,
-        "expected_seller_amount": 104367199966684
+        "expected_fee": 634254172762855,
+        "expected_seller_amount": 104367199966685
       },
       {
         "id": 23,
@@ -545,8 +545,8 @@
         "id": 32,
         "amount": 611922019161285,
         "fee_bps": 8996,
-        "expected_fee": 550485048437492,
-        "expected_seller_amount": 61436970723793
+        "expected_fee": 550485048437491,
+        "expected_seller_amount": 61436970723794
       },
       {
         "id": 33,
@@ -629,8 +629,8 @@
         "id": 44,
         "amount": 994011487811804,
         "fee_bps": 8902,
-        "expected_fee": 884869026450068,
-        "expected_seller_amount": 109142461361736
+        "expected_fee": 884869026450067,
+        "expected_seller_amount": 109142461361737
       },
       {
         "id": 45,
@@ -804,8 +804,8 @@
         "id": 69,
         "amount": 572351665236056,
         "fee_bps": 9886,
-        "expected_fee": 565826856252365,
-        "expected_seller_amount": 6524808983691
+        "expected_fee": 565826856252364,
+        "expected_seller_amount": 6524808983692
       },
       {
         "id": 70,
@@ -1665,8 +1665,8 @@
         "id": 192,
         "amount": 990385763347149,
         "fee_bps": 5812,
-        "expected_fee": 575612205657363,
-        "expected_seller_amount": 414773557689786
+        "expected_fee": 575612205657362,
+        "expected_seller_amount": 414773557689787
       },
       {
         "id": 193,
@@ -1917,8 +1917,8 @@
         "id": 228,
         "amount": 861693816725165,
         "fee_bps": 3636,
-        "expected_fee": 313311871761270,
-        "expected_seller_amount": 548381944963895
+        "expected_fee": 313311871761269,
+        "expected_seller_amount": 548381944963896
       },
       {
         "id": 229,
@@ -1952,8 +1952,8 @@
         "id": 233,
         "amount": 657919548917562,
         "fee_bps": 8101,
-        "expected_fee": 532980626578117,
-        "expected_seller_amount": 124938922339445
+        "expected_fee": 532980626578116,
+        "expected_seller_amount": 124938922339446
       },
       {
         "id": 234,
@@ -2750,8 +2750,8 @@
         "id": 347,
         "amount": 940328206866980,
         "fee_bps": 4053,
-        "expected_fee": 381115022243187,
-        "expected_seller_amount": 559213184623793
+        "expected_fee": 381115022243186,
+        "expected_seller_amount": 559213184623794
       },
       {
         "id": 348,
@@ -3366,8 +3366,8 @@
         "id": 435,
         "amount": 923946970375255,
         "fee_bps": 9058,
-        "expected_fee": 836911165765906,
-        "expected_seller_amount": 87035804609349
+        "expected_fee": 836911165765905,
+        "expected_seller_amount": 87035804609350
       },
       {
         "id": 436,
@@ -3485,8 +3485,8 @@
         "id": 452,
         "amount": 300779480254278,
         "fee_bps": 7819,
-        "expected_fee": 235179475610820,
-        "expected_seller_amount": 65600004643458
+        "expected_fee": 235179475610819,
+        "expected_seller_amount": 65600004643459
       },
       {
         "id": 453,
@@ -4185,8 +4185,8 @@
         "id": 552,
         "amount": 898480432340876,
         "fee_bps": 7020,
-        "expected_fee": 630733263503295,
-        "expected_seller_amount": 267747168837581
+        "expected_fee": 630733263503294,
+        "expected_seller_amount": 267747168837582
       },
       {
         "id": 553,
@@ -4773,8 +4773,8 @@
         "id": 636,
         "amount": 553498071618379,
         "fee_bps": 6021,
-        "expected_fee": 333261188921426,
-        "expected_seller_amount": 220236882696953
+        "expected_fee": 333261188921425,
+        "expected_seller_amount": 220236882696954
       },
       {
         "id": 637,
@@ -5046,8 +5046,8 @@
         "id": 675,
         "amount": 800240451237187,
         "fee_bps": 5137,
-        "expected_fee": 411083519800543,
-        "expected_seller_amount": 389156931436644
+        "expected_fee": 411083519800542,
+        "expected_seller_amount": 389156931436645
       },
       {
         "id": 676,
@@ -5074,8 +5074,8 @@
         "id": 679,
         "amount": 730907359393314,
         "fee_bps": 8811,
-        "expected_fee": 644002474361449,
-        "expected_seller_amount": 86904885031865
+        "expected_fee": 644002474361448,
+        "expected_seller_amount": 86904885031866
       },
       {
         "id": 680,
@@ -5284,8 +5284,8 @@
         "id": 709,
         "amount": 943277815589682,
         "fee_bps": 9341,
-        "expected_fee": 881115807542322,
-        "expected_seller_amount": 62162008047360
+        "expected_fee": 881115807542321,
+        "expected_seller_amount": 62162008047361
       },
       {
         "id": 710,
@@ -5613,8 +5613,8 @@
         "id": 756,
         "amount": 757104468531907,
         "fee_bps": 9355,
-        "expected_fee": 708271230311599,
-        "expected_seller_amount": 48833238220308
+        "expected_fee": 708271230311598,
+        "expected_seller_amount": 48833238220309
       },
       {
         "id": 757,
@@ -5886,8 +5886,8 @@
         "id": 795,
         "amount": 679820805555210,
         "fee_bps": 7261,
-        "expected_fee": 493617886913638,
-        "expected_seller_amount": 186202918641572
+        "expected_fee": 493617886913637,
+        "expected_seller_amount": 186202918641573
       },
       {
         "id": 796,
@@ -6103,8 +6103,8 @@
         "id": 826,
         "amount": 438481746707112,
         "fee_bps": 5464,
-        "expected_fee": 239586426400766,
-        "expected_seller_amount": 198895320306346
+        "expected_fee": 239586426400765,
+        "expected_seller_amount": 198895320306347
       },
       {
         "id": 827,
@@ -6229,8 +6229,8 @@
         "id": 844,
         "amount": 268557120580227,
         "fee_bps": 8634,
-        "expected_fee": 231872217908968,
-        "expected_seller_amount": 36684902671259
+        "expected_fee": 231872217908967,
+        "expected_seller_amount": 36684902671260
       },
       {
         "id": 845,
@@ -6467,8 +6467,8 @@
         "id": 878,
         "amount": 693946657003835,
         "fee_bps": 4691,
-        "expected_fee": 325530376800499,
-        "expected_seller_amount": 368416280203336
+        "expected_fee": 325530376800498,
+        "expected_seller_amount": 368416280203337
       },
       {
         "id": 879,
@@ -6866,8 +6866,8 @@
         "id": 935,
         "amount": 215344405500219,
         "fee_bps": 6210,
-        "expected_fee": 133728875815636,
-        "expected_seller_amount": 81615529684583
+        "expected_fee": 133728875815635,
+        "expected_seller_amount": 81615529684584
       },
       {
         "id": 936,
@@ -6964,8 +6964,8 @@
         "id": 949,
         "amount": 681577877607197,
         "fee_bps": 5512,
-        "expected_fee": 375685726137087,
-        "expected_seller_amount": 305892151470110
+        "expected_fee": 375685726137086,
+        "expected_seller_amount": 305892151470111
       },
       {
         "id": 950,
@@ -6992,8 +6992,8 @@
         "id": 953,
         "amount": 537820236058906,
         "fee_bps": 7331,
-        "expected_fee": 394276015054784,
-        "expected_seller_amount": 143544221004122
+        "expected_fee": 394276015054783,
+        "expected_seller_amount": 143544221004123
       },
       {
         "id": 954,
@@ -8349,8 +8349,8 @@
         "id": 44,
         "amount": 189527443144471,
         "fee_bps": 8280,
-        "seller_amount": 32598720220849,
-        "fee_amount": 156928722923622,
+        "seller_amount": 32598720220850,
+        "fee_amount": 156928722923621,
         "sum_equals_amount": true
       },
       {
@@ -8893,8 +8893,8 @@
         "id": 112,
         "amount": 421796496026218,
         "fee_bps": 2972,
-        "seller_amount": 296438577407226,
-        "fee_amount": 125357918618992,
+        "seller_amount": 296438577407227,
+        "fee_amount": 125357918618991,
         "sum_equals_amount": true
       },
       {
@@ -9093,8 +9093,8 @@
         "id": 137,
         "amount": 765382770914585,
         "fee_bps": 1747,
-        "seller_amount": 631670400835807,
-        "fee_amount": 133712370078778,
+        "seller_amount": 631670400835808,
+        "fee_amount": 133712370078777,
         "sum_equals_amount": true
       },
       {
@@ -9189,8 +9189,8 @@
         "id": 149,
         "amount": 891193114686758,
         "fee_bps": 4050,
-        "seller_amount": 530259903238621,
-        "fee_amount": 360933211448137,
+        "seller_amount": 530259903238622,
+        "fee_amount": 360933211448136,
         "sum_equals_amount": true
       },
       {
@@ -9501,8 +9501,8 @@
         "id": 188,
         "amount": 136243059299887,
         "fee_bps": 2832,
-        "seller_amount": 97659024906159,
-        "fee_amount": 38584034393728,
+        "seller_amount": 97659024906160,
+        "fee_amount": 38584034393727,
         "sum_equals_amount": true
       },
       {
@@ -9621,8 +9621,8 @@
         "id": 203,
         "amount": 909736066125334,
         "fee_bps": 2769,
-        "seller_amount": 657830149415229,
-        "fee_amount": 251905916710105,
+        "seller_amount": 657830149415230,
+        "fee_amount": 251905916710104,
         "sum_equals_amount": true
       },
       {
@@ -9653,8 +9653,8 @@
         "id": 207,
         "amount": 298364198300988,
         "fee_bps": 5516,
-        "seller_amount": 133786506518163,
-        "fee_amount": 164577691782825,
+        "seller_amount": 133786506518164,
+        "fee_amount": 164577691782824,
         "sum_equals_amount": true
       },
       {
@@ -10405,8 +10405,8 @@
         "id": 301,
         "amount": 786067987792194,
         "fee_bps": 9854,
-        "seller_amount": 11476592621766,
-        "fee_amount": 774591395170428,
+        "seller_amount": 11476592621767,
+        "fee_amount": 774591395170427,
         "sum_equals_amount": true
       },
       {
@@ -11061,8 +11061,8 @@
         "id": 383,
         "amount": 189162945840508,
         "fee_bps": 4311,
-        "seller_amount": 107614799888665,
-        "fee_amount": 81548145951843,
+        "seller_amount": 107614799888666,
+        "fee_amount": 81548145951842,
         "sum_equals_amount": true
       },
       {
@@ -12189,8 +12189,8 @@
         "id": 524,
         "amount": 932706711115316,
         "fee_bps": 9381,
-        "seller_amount": 57734545418038,
-        "fee_amount": 874972165697278,
+        "seller_amount": 57734545418039,
+        "fee_amount": 874972165697277,
         "sum_equals_amount": true
       },
       {
@@ -12269,8 +12269,8 @@
         "id": 534,
         "amount": 688537009991706,
         "fee_bps": 8464,
-        "seller_amount": 105759284734726,
-        "fee_amount": 582777725256980,
+        "seller_amount": 105759284734727,
+        "fee_amount": 582777725256979,
         "sum_equals_amount": true
       },
       {
@@ -12453,8 +12453,8 @@
         "id": 557,
         "amount": 920956671703607,
         "fee_bps": 3288,
-        "seller_amount": 618146118047461,
-        "fee_amount": 302810553656146,
+        "seller_amount": 618146118047462,
+        "fee_amount": 302810553656145,
         "sum_equals_amount": true
       },
       {
@@ -12853,8 +12853,8 @@
         "id": 607,
         "amount": 585886236978695,
         "fee_bps": 9755,
-        "seller_amount": 14354212805978,
-        "fee_amount": 571532024172717,
+        "seller_amount": 14354212805979,
+        "fee_amount": 571532024172716,
         "sum_equals_amount": true
       },
       {
@@ -13181,8 +13181,8 @@
         "id": 648,
         "amount": 746785145718605,
         "fee_bps": 5276,
-        "seller_amount": 352781302837469,
-        "fee_amount": 394003842881136,
+        "seller_amount": 352781302837470,
+        "fee_amount": 394003842881135,
         "sum_equals_amount": true
       },
       {
@@ -13317,8 +13317,8 @@
         "id": 665,
         "amount": 533422811422498,
         "fee_bps": 3763,
-        "seller_amount": 332695807484212,
-        "fee_amount": 200727003938286,
+        "seller_amount": 332695807484213,
+        "fee_amount": 200727003938285,
         "sum_equals_amount": true
       },
       {
@@ -13589,8 +13589,8 @@
         "id": 699,
         "amount": 478613725863398,
         "fee_bps": 5103,
-        "seller_amount": 234377141555306,
-        "fee_amount": 244236584308092,
+        "seller_amount": 234377141555307,
+        "fee_amount": 244236584308091,
         "sum_equals_amount": true
       },
       {
@@ -14045,8 +14045,8 @@
         "id": 756,
         "amount": 144796397304163,
         "fee_bps": 5006,
-        "seller_amount": 72311320813699,
-        "fee_amount": 72485076490464,
+        "seller_amount": 72311320813700,
+        "fee_amount": 72485076490463,
         "sum_equals_amount": true
       },
       {
@@ -14261,8 +14261,8 @@
         "id": 783,
         "amount": 812381895026193,
         "fee_bps": 6722,
-        "seller_amount": 266298785189586,
-        "fee_amount": 546083109836607,
+        "seller_amount": 266298785189587,
+        "fee_amount": 546083109836606,
         "sum_equals_amount": true
       },
       {
@@ -15253,8 +15253,8 @@
         "id": 907,
         "amount": 770949220284820,
         "fee_bps": 6417,
-        "seller_amount": 276231105628051,
-        "fee_amount": 494718114656769,
+        "seller_amount": 276231105628052,
+        "fee_amount": 494718114656768,
         "sum_equals_amount": true
       },
       {
@@ -15269,8 +15269,8 @@
         "id": 909,
         "amount": 904458308592439,
         "fee_bps": 3444,
-        "seller_amount": 592962867113203,
-        "fee_amount": 311495441479236,
+        "seller_amount": 592962867113204,
+        "fee_amount": 311495441479235,
         "sum_equals_amount": true
       },
       {
@@ -15981,8 +15981,8 @@
         "id": 998,
         "amount": 535726466216147,
         "fee_bps": 2585,
-        "seller_amount": 397241174699273,
-        "fee_amount": 138485291516874,
+        "seller_amount": 397241174699274,
+        "fee_amount": 138485291516873,
         "sum_equals_amount": true
       },
       {
@@ -17910,8 +17910,8 @@
         "seller_loss": 229144591392266,
         "seller_raw": 342738966204910,
         "buyer_refund": 229144591392266,
-        "fee": 241870888450805,
-        "seller_net": 100868077754105,
+        "fee": 241870888450804,
+        "seller_net": 100868077754106,
         "sum_equals_total": true,
         "all_non_negative": true
       },
@@ -18000,8 +18000,8 @@
         "seller_loss": 37510459779901,
         "seller_raw": 771568973545778,
         "buyer_refund": 37510459779901,
-        "fee": 423437052681923,
-        "seller_net": 348131920863855,
+        "fee": 423437052681922,
+        "seller_net": 348131920863856,
         "sum_equals_total": true,
         "all_non_negative": true
       },
@@ -18282,11 +18282,11 @@
         "buyer_loss_bps": 1215,
         "seller_loss_bps": 8785,
         "fee_bps": 871,
-        "seller_loss": 766923045375055,
-        "seller_raw": 157073053662995,
-        "buyer_refund": 766923045375055,
+        "seller_loss": 766923045375054,
+        "seller_raw": 157073053662996,
+        "buyer_refund": 766923045375054,
         "fee": 13681062974046,
-        "seller_net": 143391990688949,
+        "seller_net": 143391990688950,
         "sum_equals_total": true,
         "all_non_negative": true
       },
@@ -18990,8 +18990,8 @@
         "seller_loss": 3937299225623,
         "seller_raw": 882849794717363,
         "buyer_refund": 3937299225623,
-        "fee": 657546527105492,
-        "seller_net": 225303267611871,
+        "fee": 657546527105491,
+        "seller_net": 225303267611872,
         "sum_equals_total": true,
         "all_non_negative": true
       },
@@ -19590,8 +19590,8 @@
         "seller_loss": 62883762758810,
         "seller_raw": 563708346686673,
         "buyer_refund": 62883762758810,
-        "fee": 176046116670248,
-        "seller_net": 387662230016425,
+        "fee": 176046116670247,
+        "seller_net": 387662230016426,
         "sum_equals_total": true,
         "all_non_negative": true
       },
@@ -19620,8 +19620,8 @@
         "seller_loss": 36877227487231,
         "seller_raw": 861564596643484,
         "buyer_refund": 36877227487231,
-        "fee": 202036897912897,
-        "seller_net": 659527698730587,
+        "fee": 202036897912896,
+        "seller_net": 659527698730588,
         "sum_equals_total": true,
         "all_non_negative": true
       },
@@ -20217,11 +20217,11 @@
         "buyer_loss_bps": 2751,
         "seller_loss_bps": 7249,
         "fee_bps": 107,
-        "seller_loss": 665635285106063,
-        "seller_raw": 322574238154531,
-        "buyer_refund": 665635285106063,
+        "seller_loss": 665635285106062,
+        "seller_raw": 322574238154532,
+        "buyer_refund": 665635285106062,
         "fee": 3451544348253,
-        "seller_net": 319122693806278,
+        "seller_net": 319122693806279,
         "sum_equals_total": true,
         "all_non_negative": true
       },
@@ -20892,11 +20892,11 @@
         "buyer_loss_bps": 2451,
         "seller_loss_bps": 7549,
         "fee_bps": 324,
-        "seller_loss": 648057242018352,
-        "seller_raw": 256926594440645,
-        "buyer_refund": 648057242018352,
+        "seller_loss": 648057242018351,
+        "seller_raw": 256926594440646,
+        "buyer_refund": 648057242018351,
         "fee": 8324421659876,
-        "seller_net": 248602172780769,
+        "seller_net": 248602172780770,
         "sum_equals_total": true,
         "all_non_negative": true
       },
@@ -21270,8 +21270,8 @@
         "seller_loss": 10593918700923,
         "seller_raw": 704940656116944,
         "buyer_refund": 10593918700923,
-        "fee": 452360419030243,
-        "seller_net": 252580237086701,
+        "fee": 452360419030242,
+        "seller_net": 252580237086702,
         "sum_equals_total": true,
         "all_non_negative": true
       },
@@ -21480,8 +21480,8 @@
         "seller_loss": 6412254886616,
         "seller_raw": 565611514255491,
         "buyer_refund": 6412254886616,
-        "fee": 342704016487402,
-        "seller_net": 222907497768089,
+        "fee": 342704016487401,
+        "seller_net": 222907497768090,
         "sum_equals_total": true,
         "all_non_negative": true
       },
@@ -22332,11 +22332,11 @@
         "buyer_loss_bps": 1466,
         "seller_loss_bps": 8534,
         "fee_bps": 1237,
-        "seller_loss": 615784498850123,
-        "seller_raw": 351462266886368,
-        "buyer_refund": 615784498850123,
+        "seller_loss": 615784498850122,
+        "seller_raw": 351462266886369,
+        "buyer_refund": 615784498850122,
         "fee": 43475882413843,
-        "seller_net": 307986384472525,
+        "seller_net": 307986384472526,
         "sum_equals_total": true,
         "all_non_negative": true
       },
@@ -22605,8 +22605,8 @@
         "seller_loss": 7240336438676,
         "seller_raw": 883688295209746,
         "buyer_refund": 7240336438676,
-        "fee": 487088988319612,
-        "seller_net": 396599306890134,
+        "fee": 487088988319611,
+        "seller_net": 396599306890135,
         "sum_equals_total": true,
         "all_non_negative": true
       },
@@ -24042,11 +24042,11 @@
         "buyer_loss_bps": 3137,
         "seller_loss_bps": 6863,
         "fee_bps": 842,
-        "seller_loss": 36697731811154,
-        "seller_raw": 147497416947437,
-        "buyer_refund": 36697731811154,
+        "seller_loss": 36697731811153,
+        "seller_raw": 147497416947438,
+        "buyer_refund": 36697731811153,
         "fee": 12419282506974,
-        "seller_net": 135078134440463,
+        "seller_net": 135078134440464,
         "sum_equals_total": true,
         "all_non_negative": true
       },
@@ -24120,8 +24120,8 @@
         "seller_loss": 93715073164492,
         "seller_raw": 545372761463807,
         "buyer_refund": 93715073164492,
-        "fee": 465148428252481,
-        "seller_net": 80224333211326,
+        "fee": 465148428252480,
+        "seller_net": 80224333211327,
         "sum_equals_total": true,
         "all_non_negative": true
       },
@@ -24720,8 +24720,8 @@
         "seller_loss": 5162370313621,
         "seller_raw": 960895232235351,
         "buyer_refund": 5162370313621,
-        "fee": 676085885400793,
-        "seller_net": 284809346834558,
+        "fee": 676085885400792,
+        "seller_net": 284809346834559,
         "sum_equals_total": true,
         "all_non_negative": true
       },
@@ -25485,8 +25485,8 @@
         "seller_loss": 73928158996561,
         "seller_raw": 269774176845393,
         "buyer_refund": 73928158996561,
-        "fee": 106398935347823,
-        "seller_net": 163375241497570,
+        "fee": 106398935347822,
+        "seller_net": 163375241497571,
         "sum_equals_total": true,
         "all_non_negative": true
       },
@@ -26010,8 +26010,8 @@
         "seller_loss": 40557857838836,
         "seller_raw": 943808382606689,
         "buyer_refund": 40557857838836,
-        "fee": 900487577845042,
-        "seller_net": 43320804761647,
+        "fee": 900487577845041,
+        "seller_net": 43320804761648,
         "sum_equals_total": true,
         "all_non_negative": true
       },
@@ -26820,8 +26820,8 @@
         "seller_loss": 106410926112320,
         "seller_raw": 795172199003984,
         "buyer_refund": 106410926112320,
-        "fee": 579203429754502,
-        "seller_net": 215968769249482,
+        "fee": 579203429754501,
+        "seller_net": 215968769249483,
         "sum_equals_total": true,
         "all_non_negative": true
       },
@@ -27402,11 +27402,11 @@
         "buyer_loss_bps": 6756,
         "seller_loss_bps": 3244,
         "fee_bps": 1698,
-        "seller_loss": 161434966953687,
-        "seller_raw": 416680388968223,
-        "buyer_refund": 161434966953687,
+        "seller_loss": 161434966953686,
+        "seller_raw": 416680388968224,
+        "buyer_refund": 161434966953686,
         "fee": 70752330046804,
-        "seller_net": 345928058921419,
+        "seller_net": 345928058921420,
         "sum_equals_total": true,
         "all_non_negative": true
       },
@@ -28152,10 +28152,10 @@
         "buyer_loss_bps": 3986,
         "seller_loss_bps": 6014,
         "fee_bps": 5633,
-        "seller_loss": 536890098356928,
-        "seller_raw": 401841536865284,
-        "buyer_refund": 536890098356928,
-        "fee": 226357337716214,
+        "seller_loss": 536890098356929,
+        "seller_raw": 401841536865283,
+        "buyer_refund": 536890098356929,
+        "fee": 226357337716213,
         "seller_net": 175484199149070,
         "sum_equals_total": true,
         "all_non_negative": true
@@ -28632,10 +28632,10 @@
         "buyer_loss_bps": 5796,
         "seller_loss_bps": 4204,
         "fee_bps": 4968,
-        "seller_loss": 214298968615245,
-        "seller_raw": 445828152874251,
-        "buyer_refund": 214298968615245,
-        "fee": 221487426347927,
+        "seller_loss": 214298968615244,
+        "seller_raw": 445828152874252,
+        "buyer_refund": 214298968615244,
+        "fee": 221487426347928,
         "seller_net": 224340726526324,
         "sum_equals_total": true,
         "all_non_negative": true
@@ -29640,8 +29640,8 @@
         "seller_loss": 29965857498296,
         "seller_raw": 142596531670593,
         "buyer_refund": 29965857498296,
-        "fee": 28134295698608,
-        "seller_net": 114462235971985,
+        "fee": 28134295698607,
+        "seller_net": 114462235971986,
         "sum_equals_total": true,
         "all_non_negative": true
       },

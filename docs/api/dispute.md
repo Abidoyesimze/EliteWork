@@ -6,8 +6,8 @@ Dispute endpoints are split into two groups:
   bearer token whose wallet address appears in the mediator allowlist
   (`ADMIN_STELLAR_PUBKEYS`). See [overview.md](./overview.md#authentication)
   and [admin.md](./admin.md) for the allowlist mechanism.
-- **Dispute category endpoints** (`/dispute-categories`) — public read
-  endpoints; write endpoints require mediator access.
+- **Dispute category endpoints** (`/dispute-categories`) — readable by any
+  authenticated user; write endpoints require mediator access.
 
 All endpoints are available at the legacy root paths and under the versioned
 `/api/v1` prefix.
@@ -20,7 +20,7 @@ Responses generally follow the [error envelope](./errors.md) on failure.
 
 `GET /disputes`
 
-Returns a paginated list of disputes visible to the calling mediator.
+Returns a paginated list of disputes.
 
 **Authentication:** Bearer token required; caller must be a mediator.
 
@@ -31,7 +31,6 @@ Returns a paginated list of disputes visible to the calling mediator.
 | `status` | enum | `OPEN`, `UNDER_REVIEW`, `RESOLVED`, `CLOSED` (optional) |
 | `page` | integer | default `1` |
 | `limit` | integer | default `10`, max `100` |
-| `sort` | string | e.g. `createdAt:desc` |
 
 **Response `200`**
 
@@ -136,8 +135,8 @@ issue"). They are managed by mediators but readable by anyone.
 
 Returns all active categories. Mediators can also see inactive categories.
 
-**Authentication:** Optional. If omitted or caller is not a mediator, only
-active categories are returned.
+**Authentication:** Bearer token required. Non-mediators receive only active
+categories.
 
 **Query parameters**
 
@@ -174,10 +173,13 @@ active categories are returned.
 
 `GET /dispute-categories/:id`
 
+**Authentication:** Bearer token required.
+
 **Response `200`** — same object shape as list items.
 
 | Status | Meaning |
 |---|---|
+| `401` | Missing/invalid token |
 | `404` | Category not found |
 
 ### Create category (mediator only)
@@ -269,13 +271,9 @@ returns `400` with code `DISPUTE_STATUS_TRANSITION_INVALID`.
 
 ## Rate limits
 
-The dispute transition endpoint is rate limited per mediator:
-
-| Bucket | Window | Max requests |
-|---|---|---|
-| `disputeTransition` | 1 hour | 20 |
-
-See [overview.md](./overview.md#rate-limits) for the envelope shape.
+Dispute endpoints are subject to the API-wide rate limits described in
+[overview.md](./overview.md#rate-limits); there is no endpoint-specific
+bucket for dispute transitions.
 
 ## Dispute-specific error codes
 

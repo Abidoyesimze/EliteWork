@@ -193,18 +193,20 @@ trade evidence route at `GET /trades/:id/evidence` (see
 It returns a simpler format without pagination and includes retention status:
 
 ```json
-[
-  {
-    "id": 7,
-    "cid": "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
-    "filename": "delivery-proof.mp4",
-    "mimeType": "video/mp4",
-    "uploadedBy": "GCBUYER...",
-    "url": "https://gateway.pinata.cloud/ipfs/...",
-    "createdAt": "2026-07-05T10:30:00.000Z",
-    "retentionExpired": false
-  }
-]
+{
+  "evidence": [
+    {
+      "id": 7,
+      "cid": "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
+      "filename": "delivery-proof.mp4",
+      "mimeType": "video/mp4",
+      "uploadedBy": "GCBUYER...",
+      "url": "https://gateway.pinata.cloud/ipfs/...",
+      "createdAt": "2026-07-05T10:30:00.000Z",
+      "retentionExpired": false
+    }
+  ]
+}
 ```
 
 This endpoint is used by the dispute UI to show evidence during mediation.

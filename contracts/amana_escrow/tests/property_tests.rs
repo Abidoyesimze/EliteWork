@@ -47,7 +47,6 @@ struct PropEnv {
     usdc_id: Address,
     #[allow(dead_code)]
     admin: Address,
-    treasury: Address,
 }
 
 impl PropEnv {
@@ -67,7 +66,6 @@ impl PropEnv {
             contract_id,
             usdc_id,
             admin,
-            treasury,
         }
     }
 
@@ -102,11 +100,17 @@ impl PropEnv {
         client.resolve_dispute(&trade_id, &mediator, &seller_gets_bps);
 
         let tok = token::Client::new(&self.env, &self.usdc_id);
-        (
-            tok.balance(&seller),
-            tok.balance(&buyer),
-            tok.balance(&self.treasury),
-        )
+        // The platform fee is accrued in contract storage and stays in the
+        // escrow until the admin withdraws it (`withdraw_fees`), so it is not
+        // paid to the treasury during settlement. It is therefore reported as
+        // the accrued fee, and the escrow must still hold exactly that much.
+        let fee = client.get_accrued_fees();
+        assert_eq!(
+            tok.balance(&self.contract_id),
+            fee,
+            "[#382] escrow must hold exactly the accrued platform fee"
+        );
+        (tok.balance(&seller), tok.balance(&buyer), fee)
     }
 }
 

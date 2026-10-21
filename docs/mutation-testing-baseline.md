@@ -32,15 +32,17 @@ where a surviving mutant would directly corrupt money arithmetic.
 
 ## 3. Target score
 
-| Threshold | Score |
-|-----------|-------|
-| **Target (green)** | ≥ 80% |
-| **Warning (amber)** | 70–79% |
-| **Fail (red)** | < 70% — triggers `low` threshold in Stryker config |
+| Threshold | Score | Effect |
+|-----------|-------|--------|
+| **Target (green)** | ≥ 80% | `high` threshold in the Stryker config — the pilot is on target. |
+| **Fail (red)** | < 80% | `break` threshold in the Stryker config — the `mutation-money-math` job fails. |
 
-The `break` threshold is `null` (no hard failure) for the weekly scheduled
-run. This keeps CI green while the team triages surviving mutants. Set
-`"break": 80` once the pilot has stabilised.
+`"break": 80` is set in `backend/stryker.money-math.config.json` since the
+pilot reached the target on both modules (see §5), so a weekly run below 80%
+fails the `mutation-money-math` job instead of only warning. The job summary
+re-derives the same score from the JSON report and fails below 80% as well
+(`scripts/mutation-score.mjs --threshold 80`). The `low` threshold (70%) stays
+as the absolute floor Stryker reports on.
 
 ---
 
@@ -52,22 +54,45 @@ pnpm install          # installs @stryker-mutator/core etc.
 pnpm mutation         # runs StrykerJS, opens HTML report on completion
 ```
 
-The HTML report is written to `backend/reports/mutation/money-math/index.html`.
+The HTML report is written to `backend/reports/mutation/money-math/index.html`,
+the machine-readable report to
+`backend/reports/mutation/money-math/mutation-report.json`.
+
+The score can also be printed from the JSON report alone:
+
+```bash
+node scripts/mutation-score.mjs \
+  --report backend/reports/mutation/money-math/mutation-report.json \
+  --threshold 80
+```
+
+> The StrykerJS JSON reporter (schema 1.0) stores the per-mutant results and
+> **no** score field, so the score has to be derived from them
+> (`killed + timeout) / (killed + timeout + survived + noCoverage)`).
+> `scripts/mutation-score.mjs` implements exactly that formula and is what the
+> workflow reports in the job summary.
 
 ---
 
-## 5. Baseline (pilot run — pre-implementation)
+## 5. Baseline (pilot run)
 
-> This section records the first run result. Update after each triage cycle.
+> This section records the last measured run. Update after each triage cycle.
+
+Measured with StrykerJS 8.7.1 / Jest 30.3.0, `pnpm mutation:ci`, 139 mutants
+in 2 files, 93 tests in the dry run.
 
 | Module | Killed | Survived | Score |
 |--------|--------|----------|-------|
-| `feeComputation.ts` | — | — | **TBD — first run** |
-| `lossAllocation.ts` | — | — | **TBD — first run** |
-| **Combined** | — | — | **TBD — first run** |
+| `feeComputation.ts` | 53 | 0 | **100.00%** |
+| `lossAllocation.ts` | 78 | 8 | **90.70%** |
+| **Combined** | **131** | **8** | **94.24%** |
 
-*Run after merging this PR to establish the first baseline, then update this
-table with the actual score.*
+The combined score is **94.24%**, above the 80% target and above the 70% floor
+enforced by the workflow. Both pilot modules are above the target, which is the
+condition for expanding the scope (§8).
+
+*Re-measure with `pnpm mutation:ci` after every triage cycle and update this
+table — a drop below 80% fails the scheduled `mutation-money-math` job.*
 
 ---
 
@@ -87,13 +112,40 @@ After each run:
 | **Waive it** | Add a `// Stryker disable <MutatorName>` comment at the line with a one-line justification. |
 | **Exclude it** | Add the mutation class to `excludedMutations` in `stryker.money-math.config.json` with a PR comment. |
 
+### Open triage items (8 surviving mutants)
+
+All eight survivors are in `backend/src/lib/lossAllocation.ts`:
+
+| Line | Mutator | Change | Why it survives |
+|------|---------|--------|-----------------|
+| 97 | `ConditionalExpression` | `a.remainder > b.remainder` → negated | The sort comparator's tie-break order is not asserted — only the final allocation is. |
+| 97 | `ConditionalExpression` | `a.remainder < b.remainder` → negated | Same as above. |
+| 97 | `EqualityOperator` | `a.remainder >= b.remainder` | Equal remainders are never constructed in the tests, so the tie-break path is untested. |
+| 97 | `EqualityOperator` | `a.remainder <= b.remainder` | Same as above. |
+| 101 | `ConditionalExpression` | `a.remainder < b.remainder` → `true` | Same comparator, second branch. |
+| 101 | `EqualityOperator` | `i <= n` → `i < n` | The loop bound is not observable with the current fixtures. |
+| 101 | `UpdateOperator` | `i++` → `i--` | Same — the loop terminates on the first iteration for the tested inputs. |
+| 133 | `ArithmeticOperator` | `buyerLossBps + sellerLossBps` → `-` | `splitLossRatio` is never called with a **valid** ratio in the money-math suite, so the sum check is never exercised. |
+
+**Next step**: add a mutation test that calls `splitLossRatio` with a valid
+70/30 ratio (and one with an invalid ratio), plus a test that constructs two
+parties with an identical remainder to pin the tie-break order. That should kill
+the comparator, loop-bound and sum-check mutants and lift `lossAllocation.ts`
+to 100%.
+
 ---
 
 ## 7. Known justified waivers
 
 | Location | Mutant | Reason |
 |----------|--------|--------|
-| `feeComputation.ts` — `calculatedAt` | `StringLiteral` on ISO date | `new Date().toISOString()` survivors are excluded globally via `excludedMutations: ["StringLiteral"]` — the timestamp value is not safety-critical. |
+| — | none | No mutant is waived at the moment. |
+
+The previous revision of this document claimed that `StringLiteral` mutants were
+excluded globally through `excludedMutations` in
+`stryker.money-math.config.json`. That setting is **not** present in the
+config — the 26 `StringLiteral` mutants in the pilot scope are generated and
+killed by the existing tests, and no mutant is currently waived.
 
 ---
 
@@ -104,6 +156,10 @@ Once the pilot reaches ≥ 80% on both modules for two consecutive weekly runs:
 1. Add the next module to `mutate` in `stryker.money-math.config.json`.
 2. Document the new module in Section 2 above.
 3. Run locally first to establish a local baseline before merging.
+
+The pilot is currently at 100% (`feeComputation.ts`) and 90.70%
+(`lossAllocation.ts`); it still needs a second consecutive weekly run at that
+level before the scope is widened.
 
 Suggested next modules (in priority order):
 - `backend/src/lib/vestingSchedule.ts` (if present)

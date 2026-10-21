@@ -82,20 +82,28 @@ interface ClawbackCase {
 }
 
 // ── Production helpers (mirrors Rust lib.rs) ─────────────────────────────────
+//
+// The Rust contract computes these values in exact 128-bit integers. Plain
+// JavaScript numbers are IEEE-754 doubles, so the intermediate products lose
+// precision above 2^53 — which would make this test disagree with the
+// contract on large amounts. BigInt keeps the arithmetic exact, exactly like
+// the on-chain implementation (and like backend/src/lib/feeComputation.ts).
 
 const BPS_DIVISOR = 10_000;
+const BPS_DIVISOR_BIG = 10_000n;
 
-function checkedFeeAmount(amount: number, feeBps: number): number {
-  return Math.floor((amount * feeBps) / BPS_DIVISOR);
+function checkedFeeAmount(amount: bigint, feeBps: number): bigint {
+  return (amount * BigInt(feeBps)) / BPS_DIVISOR_BIG;
 }
 
 function checkedLossAmount(
-  total: number,
+  total: bigint,
   lossBps: number,
   sellerLossBps: number
-): number {
-  return Math.floor(
-    (total * lossBps * sellerLossBps) / (BPS_DIVISOR * BPS_DIVISOR)
+): bigint {
+  return (
+    (total * BigInt(lossBps) * BigInt(sellerLossBps)) /
+    (BPS_DIVISOR_BIG * BPS_DIVISOR_BIG)
   );
 }
 
@@ -134,11 +142,11 @@ describe("Shared money-math corpus", () => {
     it.each(corpus.fixtures.fee_boundary)(
       "case #$id: amount=$amount, bps=$fee_bps",
       (c) => {
-        const tsFee = checkedFeeAmount(c.amount, c.fee_bps);
-        expect(tsFee).toBe(c.expected_fee);
+        const tsFee = checkedFeeAmount(BigInt(c.amount), c.fee_bps);
+        expect(tsFee).toBe(BigInt(c.expected_fee));
 
-        const seller = c.amount - tsFee;
-        expect(seller).toBe(c.expected_seller_amount);
+        const seller = BigInt(c.amount) - tsFee;
+        expect(seller).toBe(BigInt(c.expected_seller_amount));
       }
     );
   });
@@ -147,8 +155,8 @@ describe("Shared money-math corpus", () => {
     it.each(corpus.fixtures.fee_generated)(
       "case #$id: amount=$amount, bps=$fee_bps",
       (c) => {
-        const tsFee = checkedFeeAmount(c.amount, c.fee_bps);
-        expect(tsFee).toBe(c.expected_fee);
+        const tsFee = checkedFeeAmount(BigInt(c.amount), c.fee_bps);
+        expect(tsFee).toBe(BigInt(c.expected_fee));
       }
     );
   });
@@ -157,8 +165,12 @@ describe("Shared money-math corpus", () => {
     it.each(corpus.fixtures.loss_boundary)(
       "case #$id: total=$total, loss_bps=$loss_bps, sl_bps=$seller_loss_bps",
       (c) => {
-        const tsLoss = checkedLossAmount(c.total, c.loss_bps, c.seller_loss_bps);
-        expect(tsLoss).toBe(c.expected_loss);
+        const tsLoss = checkedLossAmount(
+          BigInt(c.total),
+          c.loss_bps,
+          c.seller_loss_bps
+        );
+        expect(tsLoss).toBe(BigInt(c.expected_loss));
       }
     );
   });
@@ -166,19 +178,19 @@ describe("Shared money-math corpus", () => {
   describe("Release funds conservation", () => {
     it("all cases satisfy seller + fee == amount", () => {
       for (const c of corpus.fixtures.release_funds_conservation) {
-        const tsFee = checkedFeeAmount(c.amount, c.fee_bps);
-        const tsSeller = c.amount - tsFee;
+        const tsFee = checkedFeeAmount(BigInt(c.amount), c.fee_bps);
+        const tsSeller = BigInt(c.amount) - tsFee;
 
         // Invariant: seller_amount + fee_amount == amount
-        expect(tsSeller + tsFee).toBe(c.amount);
+        expect(tsSeller + tsFee).toBe(BigInt(c.amount));
 
         // Parity with expected values
-        expect(tsFee).toBe(c.fee_amount);
-        expect(tsSeller).toBe(c.seller_amount);
+        expect(tsFee).toBe(BigInt(c.fee_amount));
+        expect(tsSeller).toBe(BigInt(c.seller_amount));
 
         // Non-negative
-        expect(tsSeller).toBeGreaterThanOrEqual(0);
-        expect(tsFee).toBeGreaterThanOrEqual(0);
+        expect(tsSeller).toBeGreaterThanOrEqual(0n);
+        expect(tsFee).toBeGreaterThanOrEqual(0n);
       }
     });
   });
@@ -188,26 +200,30 @@ describe("Shared money-math corpus", () => {
       for (const c of corpus.fixtures.resolve_dispute_conservation) {
         const lossBps = BPS_DIVISOR - c.seller_gets_bps;
 
-        const tsLoss = checkedLossAmount(c.total, lossBps, c.seller_loss_bps);
-        const tsSellerRaw = c.total - tsLoss;
-        const tsBuyerRefund = c.total - tsSellerRaw;
+        const tsLoss = checkedLossAmount(
+          BigInt(c.total),
+          lossBps,
+          c.seller_loss_bps
+        );
+        const tsSellerRaw = BigInt(c.total) - tsLoss;
+        const tsBuyerRefund = BigInt(c.total) - tsSellerRaw;
         const tsFee = checkedFeeAmount(tsSellerRaw, c.fee_bps);
         const tsSellerNet = tsSellerRaw - tsFee;
 
         // Invariant: seller_net + buyer_refund + fee == total
-        expect(tsSellerNet + tsBuyerRefund + tsFee).toBe(c.total);
+        expect(tsSellerNet + tsBuyerRefund + tsFee).toBe(BigInt(c.total));
 
         // All non-negative
-        expect(tsSellerNet).toBeGreaterThanOrEqual(0);
-        expect(tsBuyerRefund).toBeGreaterThanOrEqual(0);
-        expect(tsFee).toBeGreaterThanOrEqual(0);
+        expect(tsSellerNet).toBeGreaterThanOrEqual(0n);
+        expect(tsBuyerRefund).toBeGreaterThanOrEqual(0n);
+        expect(tsFee).toBeGreaterThanOrEqual(0n);
 
         // Parity with expected values
-        expect(tsLoss).toBe(c.seller_loss);
-        expect(tsSellerRaw).toBe(c.seller_raw);
-        expect(tsBuyerRefund).toBe(c.buyer_refund);
-        expect(tsFee).toBe(c.fee);
-        expect(tsSellerNet).toBe(c.seller_net);
+        expect(tsLoss).toBe(BigInt(c.seller_loss));
+        expect(tsSellerRaw).toBe(BigInt(c.seller_raw));
+        expect(tsBuyerRefund).toBe(BigInt(c.buyer_refund));
+        expect(tsFee).toBe(BigInt(c.fee));
+        expect(tsSellerNet).toBe(BigInt(c.seller_net));
       }
     });
   });

@@ -15,7 +15,7 @@
 #      `pnpm install --frozen-lockfile --lockfile-only --ignore-scripts`
 #      (lockfile in sync with package.json, verified without touching
 #      node_modules or rewriting the lockfile).
-#   3. npm-managed dirs (repo root, routes-d) must satisfy an
+#   3. npm-managed dirs (repo root) must satisfy an
 #      `npm install --package-lock-only` round-trip: the lockfile is regenerated
 #      in a temp copy and byte-compared against the working-tree lockfile.
 #      (npm has no native --frozen-lockfile equivalent.)
@@ -32,7 +32,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 PNPM_DIRS=("backend" "frontend" "mobile")
-NPM_DIRS=("" "routes-d") # "" = repo root
+NPM_DIRS=("") # "" = repo root
 NPM_STRAY_FILES=("package-lock.json" "npm-shrinkwrap.json")
 
 CHECK_PNPM=true
@@ -102,7 +102,7 @@ if [[ "$CHECK_PNPM" == "true" ]]; then
   fi
 fi
 
-# ─── 3. npm-managed projects (root, routes-d) ───────────────────────────────
+# ─── 3. npm-managed projects (repo root) ────────────────────────────────────
 
 if [[ "$CHECK_NPM" == "true" ]]; then
   if ! command -v npm &>/dev/null; then

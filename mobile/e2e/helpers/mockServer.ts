@@ -182,7 +182,7 @@ function handleRequest(req: http.IncomingMessage, res: http.ServerResponse): voi
     req.on('data', chunk => { body += chunk; });
     req.on('end', () => {
       try {
-        const data = JSON.parse(body);
+        JSON.parse(body); // Validate JSON body
         const trade = tradeState.find(t => t.tradeId === tradeId);
         if (trade) {
           trade.status = 'DISPUTED';
@@ -204,7 +204,7 @@ function handleRequest(req: http.IncomingMessage, res: http.ServerResponse): voi
   // Upload evidence - POST /trades/:tradeId/evidence
   const evidenceMatch = url.match(/^\/trades\/(TRD-E2E-\d+)\/evidence$/);
   if (evidenceMatch && method === 'POST') {
-    const tradeId = evidenceMatch[1];
+    // const tradeId = evidenceMatch[1]; // Not used but kept for clarity
     // Check for force error flag in launch args (simulated via header for simplicity)
     const forceError = req.headers['x-force-upload-error'] === 'true';
     

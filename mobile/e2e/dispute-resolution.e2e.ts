@@ -17,7 +17,7 @@
  * test; it is started by globalSetup via jest.config.js.
  */
 
-import { device, element, by, expect as detoxExpect, waitFor } from 'detox';
+import { device, element, by, waitFor } from 'detox';
 import { mockAuthLaunchArgs } from './helpers/auth';
 import { resetTradeState } from './helpers/mockServer';
 

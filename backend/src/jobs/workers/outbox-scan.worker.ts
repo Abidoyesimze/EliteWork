@@ -9,7 +9,9 @@ import { Job } from "bullmq";
 import { appLogger } from "../../middleware/logger";
 import { scanOutboxCompleteness, OutboxConsistencyReport } from "../../lib/outbox/outboxScanner";
 import { alertService } from "../../services/alert.service";
-import { prisma } from "../../lib/db";
+import { auditTrailService } from "../../services/auditTrail.service";
+import { withHeartbeat } from "../heartbeat-wrapper";
+import { JobType } from "../../services/jobHeartbeat.service";
 
 export interface OutboxScanJobData {
   timeWindowMinutes?: number;
@@ -43,8 +45,17 @@ export async function processOutboxScanJob(
       "[OutboxScanJob] Completed",
     );
 
-    // Log report for audit trail (auditTrail model may not exist)
-    // TODO: Save report to DB for audit trail when auditTrail model is available
+    // Persist report to DB for durable audit trail
+    try {
+      await auditTrailService.logScanReport(report, job.id);
+    } catch (auditErr) {
+      // Non-fatal: log but don't abort the scan result
+      appLogger.warn(
+        { jobId: job.id, error: auditErr },
+        "[OutboxScanJob] Failed to persist scan report to audit trail",
+      );
+    }
+
     appLogger.info(
       {
         jobId: job.id,
@@ -54,7 +65,7 @@ export async function processOutboxScanJob(
           summary: report.summary,
         },
       },
-      "[OutboxScanJob] Report",
+      "[OutboxScanJob] Report persisted",
     );
 
     // Alert if critical gaps found
@@ -134,3 +145,12 @@ export const OUTBOX_SCAN_CONFIG = {
     alertOnGaps: true,
   },
 };
+
+/**
+ * Heartbeat-wrapped processor — use this when registering with BullMQ so
+ * that the job-watchdog can track execution health.
+ */
+export const wrappedProcessOutboxScanJob = withHeartbeat(
+  JobType.OUTBOX_SCAN,
+  processOutboxScanJob,
+);

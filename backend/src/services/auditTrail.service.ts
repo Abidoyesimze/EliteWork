@@ -5,6 +5,7 @@ import { TOKEN_CONFIG } from "../config/token";
 import { getAdminAllowlistLowercase } from "../lib/accessControl";
 import { getAuditSigningConfig } from "../config/auditSigning";
 import { env } from "../config/env";
+import type { OutboxConsistencyReport } from "../lib/outbox/outboxScanner";
 
 export type TradeEventType =
     | "CREATED"
@@ -292,4 +293,33 @@ export class AuditTrailService {
         const publicKey = crypto.createPublicKey(publicKeyPem);
         return crypto.verify(null, payloadBytes, publicKey, signature);
     }
+
+    /**
+     * Persists an outbox consistency scan report to the AdminActionAudit table
+     * for durable record-keeping and operational visibility.
+     *
+     * Called by the outbox-scan worker after each scheduled run.
+     */
+    async logScanReport(report: OutboxConsistencyReport, jobId: string | undefined): Promise<void> {
+        const note = JSON.stringify({
+            jobId,
+            totalTradesScanned: report.totalTradesScanned,
+            gapsDetected: report.gapsDetected.length,
+            criticalGaps: report.summary.criticalGaps,
+            warningGaps: report.summary.warningGaps,
+            summary: report.summary,
+        });
+
+        await (this.prisma as unknown as Pick<PrismaClient, "adminActionAudit">).adminActionAudit.create({
+            data: {
+                action: "OUTBOX_SCAN_REPORT",
+                actorAddress: "system",
+                targetReference: jobId ?? "unknown",
+                note,
+            },
+        });
+    }
 }
+
+/** Singleton instance used by routes and background workers. */
+export const auditTrailService = new AuditTrailService();

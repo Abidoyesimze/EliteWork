@@ -193,7 +193,16 @@ describe("ErrorBoundary", () => {
         </ErrorBoundary>,
       );
 
-      expect(renderFn).toHaveBeenCalledTimes(1);
+      // React 19 re-renders the fallback while recovering from the caught
+      // error, so the render prop can run more than once in development.
+      // Assert the contract of the latest invocation instead of pinning the
+      // render count.
+      expect(renderFn).toHaveBeenCalled();
+      const latest = renderFn.mock.calls[renderFn.mock.calls.length - 1][0];
+      expect(latest.error).toBeInstanceOf(Error);
+      expect(latest.error.message).toBe("render-prop crash");
+      expect(latest.correlationId).toMatch(/^amana-/);
+      expect(typeof latest.reset).toBe("function");
       expect(screen.getByTestId("rp-message")).toHaveTextContent(
         "render-prop crash",
       );

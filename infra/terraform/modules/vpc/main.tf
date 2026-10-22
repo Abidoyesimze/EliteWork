@@ -55,7 +55,7 @@ resource "aws_subnet" "private" {
 }
 
 resource "aws_eip" "nat" {
-  count = var.nat_gateway_count
+  count  = var.nat_gateway_count
   domain = "vpc"
 
   tags = {
@@ -164,6 +164,11 @@ variable "nat_gateway_count" {
 output "vpc_id" {
   description = "VPC ID"
   value       = aws_vpc.this.id
+}
+
+output "vpc_cidr" {
+  description = "CIDR block of the VPC"
+  value       = aws_vpc.this.cidr_block
 }
 
 output "public_subnet_ids" {

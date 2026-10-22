@@ -65,17 +65,14 @@ jobs:
         run: |
           REPORT="reports/mutation/money-math/mutation-report.json"
           if [ -f "$REPORT" ]; then
-            SCORE=$(node -e "
-              const r = require('./$REPORT');
-              const t = r.mutationScore ?? r.metrics?.mutationScore ?? 'unknown';
-              console.log(t);
-            " 2>/dev/null || echo "unknown")
-            echo "## Mutation score: ${SCORE}%" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
+            # The StrykerJS JSON report (schema 1.0) has no score field — the
+            # score is derived from the per-mutant results. The floor is the
+            # `break` threshold of stryker.money-math.config.json.
+            node ../scripts/mutation-score.mjs \
+              --report "$REPORT" \
+              --threshold 80
             echo "Pilot modules: \`feeComputation.ts\` + \`lossAllocation.ts\`" >> $GITHUB_STEP_SUMMARY
             echo "Report artifact: mutation-report-money-math-${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "See \`docs/mutation-testing-baseline.md\` for triage instructions." >> $GITHUB_STEP_SUMMARY
           else
             echo "Mutation report not found." >> $GITHUB_STEP_SUMMARY
           fi

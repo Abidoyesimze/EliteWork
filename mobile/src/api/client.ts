@@ -24,9 +24,21 @@ const apiClient = axios.create({
   timeout: 10000,
 });
 
+let authToken: string | null = null;
+
+/**
+ * Set or clear the bearer token attached to subsequent API requests.
+ * `authStore` keeps this in sync with the token persisted in SecureStore.
+ */
+export function setAuthToken(token: string | null): void {
+  authToken = token;
+}
+
 // Add token to requests
 apiClient.interceptors.request.use((config) => {
-  // Token would be added here from secure store if needed
+  if (authToken) {
+    config.headers.set('Authorization', `Bearer ${authToken}`);
+  }
   return config;
 });
 

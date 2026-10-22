@@ -24,7 +24,7 @@
   "thresholds": {
     "high": 80,
     "low": 70,
-    "break": null
+    "break": 80
   },
   "tsconfigFile": "tsconfig.json",
   "ignoreStatic": true,

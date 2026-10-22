@@ -17,6 +17,9 @@ backups/
 # Gitleaks SARIF reports (generated in CI, not committed)
 gitleaks-report.sarif
 
+# StrykerJS mutation reports (generated locally and in CI, not committed)
+backend/reports/
+
 .kiro/specs/avatar-component/.config.kiro
 .kiro/specs/avatar-component/design.md
 .kiro/specs/avatar-component/requirements.md

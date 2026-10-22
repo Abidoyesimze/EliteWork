@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, waitFor, fireEvent } from '@testing-library/react-native';
 import AdminStreamScreen from './AdminStreamScreen';
 import * as adminApiModule from '../api/admin';

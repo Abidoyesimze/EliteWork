@@ -1,0 +1,44 @@
+# Ingress lockdown for the in-cluster Redis (issue #316).
+#
+# `redis-deployment.yaml` runs the cache and queue broker behind the backend's
+# Redis URL (`redis-service:6379`). Once a NetworkPolicy selects these pods
+# the CNI denies *all* ingress except the rules listed below, so this manifest
+# is an allow-list: anything that is not named here is dropped.
+#
+# Only the backend pods (`app: backend`) open the Redis port. The frontend
+# never talks to Redis directly, and neither does the admin plane — a
+# compromised frontend pod cannot enumerate keys, drain the idempotency
+# namespace, or release another tenant's distributed lock.
+#
+# The backend's own egress is locked down separately by
+# `backend-egress-network-policy.yaml`, which allows egress to `app: redis`
+# on 6379. The two policies are complements: egress says where the backend
+# may go, this file says who may reach the cache.
+#
+# Rollout: apply in staging first and confirm the backend still connects
+# (`kubectl logs deploy/backend -c backend`) and that the readiness probe
+# stays green before enabling it in prod. A new consumer (settlement worker,
+# admin task runner) needs a scoped rule added here through a PR — do not
+# widen to an empty `from:` or to 0.0.0.0/0 without review.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: redis-ingress-lockdown
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: redis
+  policyTypes:
+    - Ingress
+  ingress:
+    # Rule 1: the backend service is the only client of the cache. A bare
+    # podSelector (no namespaceSelector) matches pods in this namespace only,
+    # so a pod in another namespace cannot inherit access.
+    - from:
+        - podSelector:
+            matchLabels:
+              app: backend
+      ports:
+        - protocol: TCP
+          port: 6379

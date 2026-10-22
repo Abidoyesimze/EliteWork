@@ -1,0 +1,44 @@
+# Ingress lockdown for the in-cluster Postgres (issue #316).
+#
+# `postgres-statefulset.yaml` runs the cluster's system-of-record database.
+# Once a NetworkPolicy selects these pods the CNI denies *all* ingress except
+# the rules listed below, so this manifest is an allow-list: anything that is
+# not named here is dropped.
+#
+# Only the backend pods (`app: backend`) open the database port. The frontend,
+# the admin plane, mobile clients (which reach the backend over HTTPS) and
+# any stray debug pod are all denied at the pod level — the database is not
+# reachable from anything except the service that owns it.
+#
+# The backend's own egress is locked down separately by
+# `backend-egress-network-policy.yaml`, which allows egress to `app: postgres`
+# on 5432. The two policies are complements: egress says where the backend may
+# go, this file says who may reach the database.
+#
+# Rollout: apply in staging first and confirm the backend still connects
+# (`kubectl logs deploy/backend -c backend`) before enabling it in prod. A new
+# consumer (reporting job, admin task runner) needs a scoped rule added here
+# through a PR — do not widen to an empty `from:` or to 0.0.0.0/0 without
+# review.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres-ingress-lockdown
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+  policyTypes:
+    - Ingress
+  ingress:
+    # Rule 1: the backend service is the only writer/reader of the database.
+    # A bare podSelector (no namespaceSelector) matches pods in this
+    # namespace only, so a pod in another namespace cannot inherit access.
+    - from:
+        - podSelector:
+            matchLabels:
+              app: backend
+      ports:
+        - protocol: TCP
+          port: 5432

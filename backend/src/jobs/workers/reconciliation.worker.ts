@@ -11,14 +11,16 @@ import { appLogger } from "../../middleware/logger";
 import { createQueueConnection } from "../queue";
 import { dailyReconciliationService } from "../../services/dailyReconciliation.service";
 import { attachDeadLetterQueue } from "../deadLetter";
+import { withHeartbeat } from "../heartbeat-wrapper";
+import { JobType } from "../../services/jobHeartbeat.service";
 
 export interface ReconciliationSweepJobData {
   sweepId?: string;
 }
 
 export function createReconciliationWorker(): Worker<ReconciliationSweepJobData> {
-  const worker = new Worker<ReconciliationSweepJobData>(
-    "reconciliation",
+  const processor = withHeartbeat(
+    JobType.RECONCILIATION,
     async (job: Job<ReconciliationSweepJobData>) => {
       const { sweepId = job.id } = job.data;
       appLogger.info({ jobId: job.id, sweepId }, "Reconciliation sweep started");
@@ -38,6 +40,11 @@ export function createReconciliationWorker(): Worker<ReconciliationSweepJobData>
         throw error;
       }
     },
+  );
+
+  const worker = new Worker<ReconciliationSweepJobData>(
+    "reconciliation",
+    processor,
     { connection: createQueueConnection() },
   );
   attachDeadLetterQueue(worker, "reconciliation");

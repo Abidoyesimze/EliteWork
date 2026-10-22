@@ -44,8 +44,15 @@ export const tradeApi = {
     return response.data;
   },
 
-  async initiateDispute(tradeId: string, reason: string): Promise<Trade> {
-    const response = await apiClient.post(`/trades/${tradeId}/dispute`, { reason });
+  async initiateDispute(
+    tradeId: string,
+    reason: string,
+    category = 'OTHER',
+  ): Promise<Trade> {
+    const response = await apiClient.post(`/trades/${tradeId}/dispute`, {
+      reason,
+      category,
+    });
     return response.data;
   },
 };

@@ -68,12 +68,12 @@ fn bench_deposit_hot_path() {
         &None,
     );
 
-    let events_before = bench.env.events().all();
-
     bench.client().deposit(&trade_id);
 
-    let events_after = bench.env.events().all();
-    let event_count = events_after.events().len() - events_before.events().len();
+    // `env.events().all()` reflects the latest host invocation only, so the
+    // events of this call are read after it. Diffing two snapshots taken
+    // around the call compares two different invocations and can underflow.
+    let event_count = bench.env.events().all().events().len();
 
     std::eprintln!(
         "[#192] deposit hot-path benchmark\n  amount={}\n  events_emitted={}",
@@ -108,12 +108,12 @@ fn bench_release_funds_hot_path() {
     bench.client().deposit(&trade_id);
     bench.client().confirm_delivery(&trade_id);
 
-    let events_before = bench.env.events().all();
-
     bench.client().release_funds(&trade_id, &bench.buyer);
 
-    let events_after = bench.env.events().all();
-    let event_count = events_after.events().len() - events_before.events().len();
+    // `env.events().all()` reflects the latest host invocation only, so the
+    // events of this call are read after it. Diffing two snapshots taken
+    // around the call compares two different invocations and can underflow.
+    let event_count = bench.env.events().all().events().len();
 
     std::eprintln!(
         "[#192] release_funds hot-path benchmark\n  amount={}\n  events_emitted={}",
@@ -142,8 +142,6 @@ fn bench_create_trade() {
 
     token::StellarAssetClient::new(&bench.env, &bench.usdc_id).mint(&bench.buyer, &(amount * 10));
 
-    let events_before = bench.env.events().all();
-
     for _ in 0..10 {
         bench.client().create_trade(
             &bench.buyer,
@@ -155,11 +153,12 @@ fn bench_create_trade() {
         );
     }
 
-    let events_after = bench.env.events().all();
-    let event_count = events_after.events().len() - events_before.events().len();
+    // `env.events().all()` reflects the latest host invocation only, so this
+    // is the event count of the last `create_trade` call.
+    let event_count = bench.env.events().all().events().len();
 
     std::eprintln!(
-        "[#192] create_trade benchmark (10 iterations)\n  avg_amount={}\n  total_events={}",
+        "[#192] create_trade benchmark (10 iterations)\n  avg_amount={}\n  events_per_trade={}",
         amount, event_count
     );
 }
@@ -184,12 +183,12 @@ fn bench_confirm_delivery() {
     );
     bench.client().deposit(&trade_id);
 
-    let events_before = bench.env.events().all();
-
     bench.client().confirm_delivery(&trade_id);
 
-    let events_after = bench.env.events().all();
-    let event_count = events_after.events().len() - events_before.events().len();
+    // `env.events().all()` reflects the latest host invocation only, so the
+    // events of this call are read after it. Diffing two snapshots taken
+    // around the call compares two different invocations and can underflow.
+    let event_count = bench.env.events().all().events().len();
 
     std::eprintln!(
         "[#192] confirm_delivery benchmark\n  amount={}\n  events_emitted={}",

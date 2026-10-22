@@ -4,6 +4,8 @@ import { createQueueConnection, ExportJobData } from '../queue';
 import { prisma } from '../../lib/db';
 import { Parser as CsvParser } from 'json2csv';
 import { attachDeadLetterQueue } from '../deadLetter';
+import { withHeartbeat } from '../heartbeat-wrapper';
+import { JobType } from '../../services/jobHeartbeat.service';
 
 export interface ExportResult {
   // Mirrors `ExportJobData['format']` so a queued 'pdf' job is not narrowed
@@ -25,8 +27,8 @@ async function uploadToS3(data: string, key: string): Promise<string | undefined
 }
 
 export function createExportWorker(): Worker<ExportJobData> {
-  const worker = new Worker<ExportJobData>(
-    'exports',
+  const processor = withHeartbeat(
+    JobType.EXPORT,
     async (job: Job<ExportJobData>): Promise<ExportResult> => {
       const { requestedBy, format, tradeIds, filters } = job.data;
       appLogger.info({ jobId: job.id, requestedBy, format }, 'Processing export job');
@@ -60,6 +62,11 @@ export function createExportWorker(): Worker<ExportJobData> {
 
       return { format, data, rowCount: trades.length, s3Key: s3Uri };
     },
+  );
+
+  const worker = new Worker<ExportJobData>(
+    'exports',
+    processor,
     { connection: createQueueConnection() },
   );
   attachDeadLetterQueue(worker, 'exports');

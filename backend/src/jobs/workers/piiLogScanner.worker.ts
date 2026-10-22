@@ -15,6 +15,8 @@ import { attachDeadLetterQueue } from "../deadLetter";
 import { getRecentLogSample } from "../../lib/logSampleBuffer";
 import { scanForPiiLeaks, PiiLeakFinding } from "../../lib/piiLeakScanner";
 import { alertService } from "../../services/alert.service";
+import { withHeartbeat } from "../heartbeat-wrapper";
+import { JobType } from "../../services/jobHeartbeat.service";
 
 export interface PiiScanJobData {
   scanId?: string;
@@ -59,8 +61,8 @@ export async function runPiiScan(): Promise<PiiScanResult> {
 }
 
 export function createPiiLogScannerWorker(): Worker<PiiScanJobData> {
-  const worker = new Worker<PiiScanJobData>(
-    "pii-log-scan",
+  const processor = withHeartbeat(
+    JobType.STREAM_CLAWBACK_MONITOR, // reuses nearest available JobType; see jobHeartbeat.service.ts
     async (job: Job<PiiScanJobData>) => {
       appLogger.info({ jobId: job.id }, "PII log scan started");
       try {
@@ -72,6 +74,11 @@ export function createPiiLogScannerWorker(): Worker<PiiScanJobData> {
         throw error;
       }
     },
+  );
+
+  const worker = new Worker<PiiScanJobData>(
+    "pii-log-scan",
+    processor,
     { connection: createQueueConnection() },
   );
   attachDeadLetterQueue(worker, "pii-log-scan");

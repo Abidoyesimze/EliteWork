@@ -12,7 +12,7 @@ every entry here should follow.
 
 | Date | Title | Severity | Postmortem |
 |---|---|---|---|
-| _none published yet_ | | | |
+| 2026-08-29 | Escrow balance drift without matching on-chain release events | P0 | [2026-08-29-escrow-drift.md](./2026-08-29-escrow-drift.md) |
 
 Add a row here whenever a new postmortem is published, newest first.
 

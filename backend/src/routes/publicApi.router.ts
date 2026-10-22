@@ -26,6 +26,11 @@ import { stellarTxStatusRoutes } from "./stellar.tx.status";
 import { stellarAssetRoutes } from "./stellar.asset";
 import { stellarAccountBalanceRoutes } from "./stellar.account.balance";
 import { stellarAccountCreateRoutes } from "./stellar.account.create";
+import { stellarPaymentsRoutes } from "./stellar.payments";
+import { stellarLedgerRoutes } from "./stellar.ledger";
+import { stellarStrictSendRoutes } from "./stellar.payment.strictSend";
+import { stellarStrictReceiveRoutes } from "./stellar.payment.strictReceive";
+import { stellarTrustlineRoutes } from "./stellar.trustline";
 import { createContractStateRouter } from "./contract.state.routes";
 import { createTreasuryRouter } from "./treasury.routes";
 import { webhooksRoutes } from "./webhooks.routes";
@@ -107,6 +112,17 @@ export function createPublicApiRouter(): Router {
   router.use("/stellar/account/create", stellarAccountCreateRoutes);
   router.use("/stellar/account", stellarAccountCreateRoutes);
   router.use("/stellar/account", stellarAccountBalanceRoutes);
+  // Payment history: GET /stellar/account/:address/payments
+  router.use("/stellar/account", stellarPaymentsRoutes);
+  // Ledger info: GET /stellar/ledger/latest
+  router.use("/stellar/ledger", stellarLedgerRoutes);
+  // Path payments (build unsigned XDR):
+  // POST /stellar/payments/strict-send
+  // POST /stellar/payments/strict-receive
+  router.use("/stellar/payments", stellarStrictSendRoutes);
+  router.use("/stellar/payments", stellarStrictReceiveRoutes);
+  // Trustline management: POST/DELETE /stellar/trustline
+  router.use("/stellar", stellarTrustlineRoutes);
   router.use("/contract", createContractStateRouter());
 
   // Treasury management

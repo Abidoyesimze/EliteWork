@@ -10,6 +10,11 @@ module.exports = {
   },
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
+    // @pact-foundation/pact@16 requires ESM-only https-proxy-agent@9 at
+    // module load; Jest's CJS runtime cannot parse it. The agent is never
+    // constructed unless a proxy env var is set.
+    "^https-proxy-agent$":
+      "<rootDir>/src/__tests__/stubs/httpsProxyAgent.ts",
   },
   modulePaths: ["<rootDir>"],
   setupFiles: ["<rootDir>/src/__tests__/setup.ts"],

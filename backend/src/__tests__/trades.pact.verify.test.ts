@@ -6,6 +6,7 @@ import { Trade, TradeStatus } from '@prisma/client';
 import { createTradeRouter } from '../routes/trade.routes';
 import { errorHandler } from '../middleware/errorHandler';
 import { AuthService } from '../services/auth.service';
+import * as contractServiceModule from '../services/contract.service';
 import { ContractService } from '../services/contract.service';
 import { TradeService } from '../services/trade.service';
 
@@ -20,12 +21,18 @@ jest.mock('../services/auth.service', () => ({
 }));
 
 const JWT_SECRET = 'pact-provider-verify-secret-key-at-least-32-chars';
-const pactFile = path.resolve(
-  __dirname,
-  '../../../frontend/tests/pact/pacts/AmanaFrontend-AmanaBackend.json',
-);
-const pactTest = existsSync(pactFile) ? it : it.skip;
-const pactDescribe = existsSync(pactFile) ? describe : describe.skip;
+const pactFiles = [
+  path.resolve(
+    __dirname,
+    '../../../frontend/tests/pact/pacts/AmanaFrontend-AmanaBackend.json',
+  ),
+  path.resolve(
+    __dirname,
+    '../../../mobile/tests/pact/pacts/AmanaMobile-AmanaBackend.json',
+  ),
+].filter((file) => existsSync(file));
+const pactTest = pactFiles.length > 0 ? it : it.skip;
+const pactDescribe = pactFiles.length > 0 ? describe : describe.skip;
 
 function createMockTradeService() {
   return {
@@ -71,6 +78,14 @@ function makeTrade(overrides: Partial<Trade> = {}): Trade {
 
 const mockTradeService = createMockTradeService();
 const mockContractService = createMockContractService();
+let mockedTradeStatus: TradeStatus = TradeStatus.CREATED;
+
+jest
+  .spyOn(contractServiceModule, 'buildConfirmDeliveryTx')
+  .mockResolvedValue('AAAAAXNvbWUtY29uZmlybS14ZHI=');
+jest
+  .spyOn(contractServiceModule, 'buildReleaseFundsTx')
+  .mockResolvedValue('AAAAAXNvbWUtcmVsZWFzZS14ZHI=');
 
 function createTestApp(): express.Application {
   const app = express();
@@ -82,6 +97,7 @@ function createTestApp(): express.Application {
 
   const tradeRouter = createTradeRouter();
   app.use('/trades', tradeRouter);
+  app.use('/api/v1/trades', tradeRouter);
   app.use(errorHandler);
 
   return app;
@@ -95,7 +111,7 @@ pactDescribe('Pact Provider Verification - Trades API', () => {
     app = createTestApp();
 
     const buyerAddress = 'GDNM7WSJ7VIUVK2TSZ2OQES5XR2663TZEIBFXRDT56B5IRLHERVWSXMU';
-    const sellerAddress = 'GA4T33YK6H6D5E7ZQY5W3J2L7F8K9B0N1M2P3Q4R5S6T7U8V9W0X1Y2Z3';
+    const sellerAddress = 'GBQ5NYMF2UBXZPH7PCPCUNTONIIIVRRQ24ZDUVAOD4GXLMI5SAQUJDFK';
 
     mockContractService.buildCreateTradeTx.mockResolvedValue({
       tradeId: '4294967297',
@@ -113,7 +129,7 @@ pactDescribe('Pact Provider Verification - Trades API', () => {
           buyerAddress,
           sellerAddress,
           amountUsdc: '100.00',
-          status: TradeStatus.CREATED,
+          status: mockedTradeStatus,
         });
       }
       return null;
@@ -166,23 +182,28 @@ pactDescribe('Pact Provider Verification - Trades API', () => {
     jest.restoreAllMocks();
   });
 
-  pactTest('verifies the provider against the consumer pact', async () => {
-    const pactDir = path.resolve(__dirname, '../../../frontend/tests/pact/pacts');
+  pactTest('verifies the provider against the consumer pacts', async () => {
     const port = process.env.PACT_PROVIDER_PORT || '3001';
 
     const { Verifier } = await import('@pact-foundation/pact');
     const output = await new Verifier({
       provider: 'AmanaBackend',
       providerBaseUrl: `http://localhost:${port}`,
-      pactUrls: [
-        path.resolve(pactDir, 'AmanaFrontend-AmanaBackend.json'),
-      ],
+      pactUrls: pactFiles,
       stateHandlers: {
         'a buyer is authenticated': async () => Promise.resolve(),
-        'a trade exists in CREATED status': async () => Promise.resolve(),
-        'a trade exists in FUNDED status': async () => Promise.resolve(),
-        'a trade exists in DELIVERED status': async () => Promise.resolve(),
-        'a trade exists with id 4294967297': async () => Promise.resolve(),
+        'a trade exists in CREATED status': async () => {
+          mockedTradeStatus = TradeStatus.CREATED;
+        },
+        'a trade exists in FUNDED status': async () => {
+          mockedTradeStatus = TradeStatus.FUNDED;
+        },
+        'a trade exists in DELIVERED status': async () => {
+          mockedTradeStatus = TradeStatus.DELIVERED;
+        },
+        'a trade exists with id 4294967297': async () => {
+          mockedTradeStatus = TradeStatus.CREATED;
+        },
         'the user has trades': async () => Promise.resolve(),
         'the user has trade statistics': async () => Promise.resolve(),
       },

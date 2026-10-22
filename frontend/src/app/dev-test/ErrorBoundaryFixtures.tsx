@@ -98,8 +98,8 @@ export function ErrorBoundaryFixtures() {
         Error Boundary Fixtures
       </h2>
       <p className="text-text-muted text-xs mb-6">
-        Click "Trigger crash" inside each card to verify the branded fallback.
-        The "Try again" button resets the boundary — clicking it should restore
+        Click &quot;Trigger crash&quot; inside each card to verify the branded fallback.
+        The &quot;Try again&quot; button resets the boundary — clicking it should restore
         the fixture card.
       </p>
 

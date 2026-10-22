@@ -68,6 +68,10 @@ export function StalenessIndicator({
 
   if (!badgeVisible) return null;
 
+  // `Date.now()` is read once per render on purpose — see the doc comment at
+  // the top of this file. Re-rendering on a timer would keep every mounted
+  // badge (and its subtree) awake for no benefit on short-lived pages.
+  // eslint-disable-next-line react-hooks/purity
   const elapsed = cachedAt ? Date.now() - cachedAt : null;
   const label = isOffline ? "Offline" : "Stale";
   const timeLabel = elapsed !== null ? formatElapsed(elapsed) : null;

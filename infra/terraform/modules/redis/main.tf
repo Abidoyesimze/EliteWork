@@ -47,21 +47,21 @@ resource "aws_elasticache_subnet_group" "this" {
 }
 
 resource "aws_elasticache_replication_group" "this" {
-  replication_group_id          = "${var.project_name}-redis"
-  replication_group_description = "${var.project_name} Redis cluster"
-  node_type                     = var.node_type
-  number_cache_clusters         = var.replica_count
-  port                          = var.port
-  engine                        = var.engine
-  engine_version                = var.engine_version
-  parameter_group_name          = var.parameter_group_name
-  subnet_group_name             = aws_elasticache_subnet_group.this.name
-  security_group_ids            = [aws_security_group.this.id]
-  automatic_failover_enabled    = var.automatic_failover_enabled
-  multi_az_enabled              = var.multi_az_enabled
-  at_rest_encryption_enabled    = var.at_rest_encryption_enabled
-  transit_encryption_enabled    = var.transit_encryption_enabled
-  auth_token                    = var.auth_token
+  replication_group_id       = "${var.project_name}-redis"
+  description                = "${var.project_name} Redis cluster"
+  node_type                  = var.node_type
+  num_cache_clusters         = var.replica_count
+  port                       = var.port
+  engine                     = var.engine
+  engine_version             = var.engine_version
+  parameter_group_name       = var.parameter_group_name
+  subnet_group_name          = aws_elasticache_subnet_group.this.name
+  security_group_ids         = [aws_security_group.this.id]
+  automatic_failover_enabled = var.automatic_failover_enabled
+  multi_az_enabled           = var.multi_az_enabled
+  at_rest_encryption_enabled = var.at_rest_encryption_enabled
+  transit_encryption_enabled = var.transit_encryption_enabled
+  auth_token                 = var.auth_token
 
   snapshot_retention_limit = var.snapshot_retention_limit
   snapshot_window          = var.snapshot_window

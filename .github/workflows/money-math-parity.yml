@@ -10,6 +10,8 @@ on:
       - "shared-test-fixtures/**"
       - "contracts/amana_escrow/src/lib.rs"
       - "contracts/amana_escrow/src/tests/bps_fuzz_tests.rs"
+      - "contracts/amana_escrow/tests/parity_money_math.rs"
+      - "docs/money-math-invariant-catalog.md"
       - ".github/workflows/money-math-parity.yml"
   pull_request:
     branches:
@@ -19,6 +21,8 @@ on:
       - "shared-test-fixtures/**"
       - "contracts/amana_escrow/src/lib.rs"
       - "contracts/amana_escrow/src/tests/bps_fuzz_tests.rs"
+      - "contracts/amana_escrow/tests/parity_money_math.rs"
+      - "docs/money-math-invariant-catalog.md"
       - ".github/workflows/money-math-parity.yml"
 
 jobs:

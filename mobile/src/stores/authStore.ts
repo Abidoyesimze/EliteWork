@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
 
+import { setAuthToken } from '../api/client';
+
 const REMEMBERED_WALLET_KEY = 'amana_remembered_wallet';
 
 export type AuthRole = 'admin' | 'user' | null;
@@ -48,6 +50,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setToken: async (token: string) => {
     await SecureStore.setItemAsync('amana_token', token);
+    setAuthToken(token);
     set({ token });
   },
 
@@ -63,6 +66,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   getToken: async () => {
     try {
       const token = await SecureStore.getItemAsync('amana_token');
+      setAuthToken(token);
       set({ token });
       return token;
     } catch (error) {
@@ -85,6 +89,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     // ends the session, but the biometric-unlock shortcut for this
     // device/wallet pair should still work on the next launch.
     await SecureStore.deleteItemAsync('amana_token');
+    setAuthToken(null);
     set({ token: null, walletAddress: null, role: null });
   },
 }));

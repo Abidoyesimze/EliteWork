@@ -1,4 +1,9 @@
-import { getFeatureFlags, isAdminUIEnabled, isFeatureEnabled } from "../featureFlags";
+import {
+  getFeatureFlags,
+  isAdminUIEnabled,
+  isFeatureEnabled,
+  FLAG_CATALOG,
+} from "../featureFlags";
 
 describe("Feature Flags", () => {
   const originalEnv = process.env;
@@ -76,15 +81,18 @@ describe("Feature Flags", () => {
     });
   });
 
-  describe("Safety - defaults to disabled", () => {
-    it("ensures features are disabled by default for safety", () => {
+  describe("Safety - fail-safe defaults", () => {
+    it("resolves every flag to its catalog fail-safe default when env vars are unset", () => {
       delete process.env.NEXT_PUBLIC_ENABLE_ADMIN_UI;
+      delete process.env.NEXT_PUBLIC_ENABLE_CLAWBACK_UI;
+      delete process.env.NEXT_PUBLIC_ENABLE_ADVANCED_REPORTING;
+      delete process.env.NEXT_PUBLIC_DISABLE_OFFLINE_BANNER;
+      delete process.env.NEXT_PUBLIC_ENABLE_TRADE_WIZARD_V2;
       const flags = getFeatureFlags();
-      
-      // All flags should default to false for safety
-      Object.values(flags).forEach((flag) => {
-        expect(flag).toBe(false);
-      });
+
+      // Every flag must fall back to the catalog's fail-safe: UI flags are OFF
+      // until explicitly enabled, kill-switch flags are ON unless disabled.
+      expect(flags).toEqual(FLAG_CATALOG);
     });
   });
 });

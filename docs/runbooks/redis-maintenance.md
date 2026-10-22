@@ -75,7 +75,7 @@ redis-cli -h <primary> ping  # PONG
 | Failure | Mitigation |
 |---|---|
 | Split-brain double payout attempted | Blocked by DB `lockedAt` + Redis `clawback:lock:*` fail-closed 503. Even if Redis partitions, DB single source prevents double payout. |
-| Global deadlock (all requests 503) | Only payout-critical paths are 503; cache/rate-limit/queues are fail-open/degrade. Trade creation/listing remain available via DB fallback. |
+| Global deadlock (all requests 503) | Auth revocation/token-version checks fail closed, so authenticated trade and settlement routes can return 503 while Redis is down. Cache/rate-limit/queues fail open or degrade; unauthenticated/cache-only paths stay available. See `docs/runbooks/redis-outage-active-settlement.md`. |
 | Queue job loss | BullMQ `attempts:3` + DLQ + `retryStrategy` ensures no loss; verify `reconciliation` daily sweep still scheduled (`0 2 * * *`). |
 | Auth outage | Logins 503, but existing sessions continue (JWT stateless). No mass logout. |
 
@@ -88,6 +88,7 @@ redis-cli -h <primary> ping  # PONG
 ## Links
 
 - `docs/redis-resilience.md`
+- `docs/runbooks/redis-outage-active-settlement.md` (unplanned outage during settlement)
 - `backend/src/lib/redisPolicy.ts`
 - `backend/src/__tests__/redis.resilience.test.ts`
 - `infra/terraform/modules/redis/main.tf` (multi-AZ, auto_failover)

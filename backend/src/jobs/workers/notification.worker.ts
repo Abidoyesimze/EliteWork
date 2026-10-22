@@ -5,6 +5,8 @@ import { prisma } from '../../lib/db';
 import type { Prisma } from '@prisma/client';
 import { attachDeadLetterQueue } from '../deadLetter';
 import { sendSms } from '../../services/sms.service';
+import { withHeartbeat } from '../heartbeat-wrapper';
+import { JobType } from '../../services/jobHeartbeat.service';
 
 async function dispatchSms(userAddress: string, title: string, message: string, jobId: string | undefined) {
   const pref = await (prisma as unknown as {
@@ -23,8 +25,8 @@ async function dispatchSms(userAddress: string, title: string, message: string, 
 }
 
 export function createNotificationWorker(): Worker<NotificationJobData> {
-  const worker = new Worker<NotificationJobData>(
-    'notifications',
+  const processor = withHeartbeat(
+    JobType.NOTIFICATION,
     async (job: Job<NotificationJobData>) => {
       const { userAddress, type, title, message, metadata } = job.data;
       appLogger.info({ jobId: job.id, userAddress, type }, 'Processing notification job');
@@ -48,6 +50,11 @@ export function createNotificationWorker(): Worker<NotificationJobData> {
 
       appLogger.info({ jobId: job.id, userAddress }, 'Notification job completed');
     },
+  );
+
+  const worker = new Worker<NotificationJobData>(
+    'notifications',
+    processor,
     { connection: createQueueConnection() },
   );
   attachDeadLetterQueue(worker, 'notifications');

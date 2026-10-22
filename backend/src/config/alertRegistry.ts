@@ -37,8 +37,9 @@ export const ALERT_REGISTRY: Record<AlertType, AlertRegistryEntry> = {
   },
   redis_connection_failure: {
     routing: "page",
-    runbookUrl: "docs/runbooks/incident-response.md#severity-levels",
-    description: "Redis is unreachable, degrading caching, sessions, and rate limiting.",
+    runbookUrl: "docs/runbooks/redis-outage-active-settlement.md",
+    description:
+      "Redis is unreachable, failing auth/settlement paths closed and degrading caching, queues, and rate limiting.",
   },
   cache_unavailable: {
     routing: "ticket",

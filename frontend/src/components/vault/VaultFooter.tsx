@@ -31,6 +31,17 @@ const socialIcons = {
   discord: DiscordIcon,
 };
 
+/**
+ * Accessible names for the icon-only social links — without them the links
+ * have no discernible name (Lighthouse `link-name`).
+ */
+const socialLabels: Record<keyof typeof socialIcons, string> = {
+  x: "Amana on X",
+  instagram: "Amana on Instagram",
+  tiktok: "Amana on TikTok",
+  discord: "Amana on Discord",
+};
+
 export function VaultFooter({ version, links, socialLinks }: VaultFooterProps) {
   return (
     <footer className="mt-16 pt-8 border-t border-border-default">
@@ -63,6 +74,7 @@ export function VaultFooter({ version, links, socialLinks }: VaultFooterProps) {
                 <a
                   key={social.platform}
                   href={social.href}
+                  aria-label={socialLabels[social.platform]}
                   className="w-10 h-10 rounded-full bg-bg-elevated border border-border-default flex items-center justify-center hover:border-border-hover transition-colors"
                 >
                   <Icon className="w-4 h-4 text-text-primary" />

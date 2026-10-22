@@ -19,6 +19,7 @@ None of these checks use `continue-on-error`; a failure blocks the merge.
 | `Frontend Required Gate`    | `.github/workflows/ci.yml` | `frontend/` | `npm ci`, `npm run lint`, `npm run build`          |
 | `Backend Required Gate`     | `.github/workflows/ci.yml` | `backend/`  | `npm ci`, `npm run build`, representative smoke suite (auth, trade, events, validation) |
 | `Contracts Required Gate`   | `.github/workflows/ci.yml` | `contracts/` | `cargo test`                                      |
+| `Scripts Unit Tests`        | `.github/workflows/ci.yml` | `scripts/`  | `pnpm test:scripts` — unit tests for the CI gate scripts, so a bug in a gate cannot silently disable it |
 
 Path-aware skipping is enabled via `dorny/paths-filter`. When a stack has no changed files the
 gate emits a skip note and exits 0, so branch protection is satisfied without running unnecessary
@@ -39,6 +40,7 @@ both `main` and `develop`:
     - `Frontend Required Gate`
     - `Backend Required Gate`
     - `Contracts Required Gate`
+    - `Scripts Unit Tests`
 - [x] **Do not allow bypassing the above settings** (applies to admins too)
 
 ## What Is Explicitly Prohibited
@@ -63,7 +65,9 @@ Run this checklist after any change to `.github/workflows/ci.yml` or repository 
    check fails and the merge button is blocked.
 4. Confirm the `Backend Required Gate` runs the full smoke suite (auth, trade, events,
    validation) by inspecting the CI log for the expected test file names.
-5. Record the date of verification and the GitHub username of the reviewer in the table below.
+5. Confirm the `Scripts Unit Tests` job runs `pnpm test:scripts` and that a deliberately broken
+   gate script fails it (e.g. make `scripts/validate-flaky-quarantine.mjs` always exit 0).
+6. Record the date of verification and the GitHub username of the reviewer in the table below.
 
 ## Verification Log
 

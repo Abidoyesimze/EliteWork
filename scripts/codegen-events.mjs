@@ -17,13 +17,13 @@
  *   node scripts/codegen-events.mjs --check    # exit 1 on any drift
  */
 
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, readdirSync, statSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SCHEMA_PATH = resolve(ROOT, "schemas/events/amana_escrow.events.json");
-const CONTRACT_SRC = resolve(ROOT, "contracts/amana_escrow/src/lib.rs");
+const CONTRACT_SRC_DIR = resolve(ROOT, "contracts/amana_escrow/src");
 const RUST_OUT = resolve(ROOT, "contracts/amana_escrow/src/generated/event_schema.rs");
 const TS_OUT = resolve(ROOT, "backend/src/types/generated/events.generated.ts");
 
@@ -96,6 +96,25 @@ function parseContractEvents(source) {
   }
 
   return events;
+}
+
+/**
+ * Reads the whole contract source tree. Events and `EVENT_SCHEMA_VERSION` used
+ * to live in `lib.rs`; the contract is now split into modules (for example
+ * `events.rs`), so scanning a single file silently reported every event as
+ * removed.
+ */
+function loadContractSource(dir) {
+  const sources = [];
+  for (const entry of readdirSync(dir).sort()) {
+    const path = resolve(dir, entry);
+    if (statSync(path).isDirectory()) {
+      sources.push(loadContractSource(path));
+    } else if (entry.endsWith(".rs")) {
+      sources.push(readFileSync(path, "utf8"));
+    }
+  }
+  return sources.join("\n");
 }
 
 function verifyAgainstContract(schema, source) {
@@ -334,7 +353,7 @@ function writeOrCheck(path, contents) {
 }
 
 const schema = loadSchema();
-const contractSource = readFileSync(CONTRACT_SRC, "utf8");
+const contractSource = loadContractSource(CONTRACT_SRC_DIR);
 
 const problems = verifyAgainstContract(schema, contractSource);
 if (problems.length > 0) {

@@ -16,7 +16,8 @@ Redis backs queues, locks, cache, and rate limiting. This document defines the *
 | **Cache** (`cacheGet/Set`, `streamCache`, `quoteCache`, `dailyReconciliation`, `feature-flags`) | `GET/SET EX` | **Fail-open graceful** | `cacheGet` → `null` (miss), `cacheSet` → no-op, callers fall back to DB/Horizon. Warn + `cache_unavailable`. | `cache_unavailable` |
 | **Rate limiting** | `express-rate-limit` MemoryStore (wallet/IP keying) | **Fail-open graceful (documented choice)** | **Allow request** with per-pod counters (lenient). Do NOT deny traffic. Rationale: routine Redis upgrade must not cause global deadlock. Alternatives considered: fail-closed (deny all when Redis down) rejected — unacceptable for trade flows on mobile networks. | `redis_connection_failure` (page, informational) |
 | **Queues** (BullMQ: `webhooks`, `notifications`, `exports`, `trade-expiry`, `reconciliation` + DLQs) | BullMQ + `createQueueConnection()` per queue/worker | **Degrade-queue, resume on reconnect** | Producers throw transiently, workers pause. Connections use `retryStrategy` exponential backoff (200ms*attempt capped 5s, 20 retries). Jobs are durable in Redis (AOF + RDB) and remain until processed. DLQs capture failed jobs after 3 attempts. On reconnect, workers re-attach and drain. | `redis_connection_failure` + Grafana `redis_key_length_total{key=~"bull:.*:wait"}` |
-| **Auth challenge / revocation** | `challenge:{addr}`, `revoked_jti:{jti}`, `auth:challenge-failures:{id}` | **Fail-closed (503)** | Challenge generation/verification and `isTokenRevoked` deny auth when Redis unavailable. Prevents use of revoked tokens during split-brain. | `redis_connection_failure` |
+| **Auth challenge / revocation / token version** | `challenge:{addr}`, `revoked_jti:{jti}`, `token_version:{addr}`, `auth:challenge-failures:{id}` | **Fail-closed (503)** | Challenge generation/verification, `isTokenRevoked`, and `getTokenVersion` deny auth when Redis unavailable. Because every authenticated request re-checks revocation/version, **all authenticated trade and settlement routes can return 503 during a Redis outage**. Prevents use of revoked tokens during split-brain. | `redis_connection_failure` (page) |
+| **Admin session registry** | `admin_session:{jti}`, `admin_sessions:{wallet}` | **Fail-closed (401/503)** | Device-bound admin session lookup/registration fails closed; admin actions (including clawback/terminate) are unavailable until Redis recovers. | `redis_connection_failure` (page) |
 | **Feature flags** | `feature:<name>` | **Fail-open graceful** | Fall back to DB/default rollout. | `cache_unavailable` |
 
 ## Fail-closed verification (payout-safety-critical)
@@ -54,9 +55,10 @@ Coverage:
 
 See `backend/src/__tests__/redis.resilience.test.ts`.
 
-## Maintenance runbook
+## Runbooks
 
-See `docs/runbooks/redis-maintenance.md` for the maintenance window procedure that guarantees no payout risk.
+- `docs/runbooks/redis-maintenance.md` — planned maintenance/failover with no payout risk.
+- `docs/runbooks/redis-outage-active-settlement.md` — unplanned outage during an active trade settlement window, including impact matrix, recovery ordering, and payout-intent reconciliation.
 
 ## References
 
@@ -66,3 +68,4 @@ See `docs/runbooks/redis-maintenance.md` for the maintenance window procedure th
 - `backend/src/jobs/queue.ts`, `deadLetter.ts`, workers
 - `infra/terraform/modules/redis` (ElastiCache replication_group multi-AZ, auto-failover)
 - `docs/runbooks/redis-maintenance.md`
+- `docs/runbooks/redis-outage-active-settlement.md`

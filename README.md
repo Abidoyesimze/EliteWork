@@ -79,10 +79,11 @@ The backend writes `backend/src/docs/openapi.json` from the YAML spec in non-pro
 Amana enforces stack-level CI gates on pull requests through `.github/workflows/ci.yml`.
 
 - **Lockfile Drift Check**: `./scripts/check-lockfile-drift.sh` — fails fast if a `pnpm-lock.yaml`/`package-lock.json` is out of sync with its `package.json`, or if a stray `package-lock.json` reappears in pnpm-managed `frontend/`/`backend/`/`mobile/`
+- **Scripts Unit Tests**: `pnpm test:scripts` at the repo root — runs the unit tests for the CI gate scripts in `scripts/` (e.g. the quarantine registry validator and the contract determinism verifier), so a bug inside a gate cannot silently disable it
 - **Frontend Required Gate**: `pnpm install --frozen-lockfile`, `pnpm lint`, `pnpm build`, `pnpm test` in `frontend/`
 - **Backend Required Gate**: `pnpm install --frozen-lockfile`, `pnpm build`, `pnpm test` in `backend/`
 - **Mobile Required Gate**: `pnpm install --frozen-lockfile`, `pnpm type-check`, `pnpm lint` in `mobile/`
-- **Contracts Required Gate**: `cargo test` in `contracts/amana_escrow/`
+- **Contracts Required Gate**: `cargo audit`, deployment safety checks, a test-coverage guard and `cargo test --locked` in `contracts/amana_escrow/` — the gate runs every integration suite in `contracts/amana_escrow/tests/` **and** the inline `#[cfg(test)]` modules in `contracts/amana_escrow/src/tests/`. `node scripts/check-contract-test-coverage.mjs` fails the gate if a test file is not wired into a cargo test target (it would never run) or if an inline test module is missing from the module tree.
 
 Path-aware execution is enabled to avoid unnecessary runtime. If a stack has no changed files, the gate reports a skip-note and passes.
 
@@ -202,3 +203,14 @@ step-by-step example.
 Distributed under the MIT License. See `LICENSE` for more information.
 
 // setting up and starting out
+
+## Handsoff notes
+
+<!-- handsoff-issue-196 -->
+- #196: backend: add unit tests for `src/services/auditTrail.service.ts`
+
+<!-- handsoff-issue-197 -->
+- #197: backend: add unit tests for `src/services/contract.service.ts`
+
+<!-- handsoff-issue-198 -->
+- #198: backend: add unit tests for `src/services/dailyReconciliation.service.ts`

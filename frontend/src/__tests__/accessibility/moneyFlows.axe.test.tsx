@@ -4,6 +4,7 @@ import { axe, toHaveNoViolations } from "jest-axe";
 import { CurrencyInput } from "@/components/ui/CurrencyInput";
 import { VideoUploadCard } from "@/components/ui/VideoUploadCard";
 import { ConfirmActionModal } from "@/components/ui/ConfirmActionModal";
+import type { AssetInfo } from "@/lib/stellar/assets";
 
 expect.extend(toHaveNoViolations);
 
@@ -13,13 +14,20 @@ jest.mock("@/lib/stellar/assets", () => ({
 
 // Mock BentoCard for VideoUploadCard
 jest.mock("@/components/ui/BentoCard", () => ({
-  BentoCard: ({ children }: any) => <div>{children}</div>,
+  BentoCard: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
 }));
 jest.mock("@/components/ui/Icon", () => ({
-  Icon: (props: any) => <span {...props} />,
+  Icon: (props: React.ComponentProps<"span">) => <span {...props} />,
 }));
 
-const mockAsset = { symbol: "cNGN", decimals: 2, name: "cNGN", code: "cNGN", issuer: "G...", contractId: "C..." } as any;
+const mockAsset: AssetInfo = {
+  symbol: "cNGN",
+  decimals: 2,
+  name: "cNGN",
+  code: "cNGN",
+  issuer: "G...",
+  type: "credit_alphanum4",
+};
 
 describe("Money-action flows — axe WCAG 2.1 AA", () => {
   describe("CurrencyInput", () => {

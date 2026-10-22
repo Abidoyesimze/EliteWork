@@ -23,7 +23,7 @@ const prisma = new PrismaClient();
 const CIPHERTEXT_PATTERN = /^v\d+:[0-9a-f]+:[0-9a-f]+:[0-9a-f]+:[0-9a-f]+$/i;
 
 interface PiiColumnSpec {
-  model: "deliveryManifest";
+  model: "deliveryManifest" | "tradeNote";
   table: string;
   idColumn: string;
   column: string;
@@ -35,6 +35,7 @@ const PII_COLUMNS: PiiColumnSpec[] = [
   { model: "deliveryManifest", table: "DeliveryManifest", idColumn: "tradeId", column: "driverIdNumber" },
   { model: "deliveryManifest", table: "DeliveryManifest", idColumn: "tradeId", column: "vehicleRegistration" },
   { model: "deliveryManifest", table: "DeliveryManifest", idColumn: "tradeId", column: "routeDescription" },
+  { model: "tradeNote", table: "TradeNote", idColumn: "id", column: "content" },
 ];
 
 async function verify(): Promise<number> {

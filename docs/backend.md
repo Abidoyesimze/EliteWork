@@ -19,6 +19,24 @@ router.post(
 );
 ```
 
+### Why `src/validators/` only contains `user.validators.ts`
+
+`backend/src/validators/` holds a single file (`user.validators.ts`) that defines
+the Zod schema for the user-profile update body. This is intentional and not an
+oversight:
+
+| Location | Purpose |
+|---|---|
+| `src/schemas/` | Domain-level Zod schemas for business entities (trades, money, evidence, etc.), shared across routes and services. |
+| `src/validators/` | Route-level request-body schemas for the _user_ resource only. `user.validators.ts` was extracted here because it is consumed by a dedicated `validateRequest` middleware call in `user.routes.ts` and tests reference it directly by path. |
+
+All other request validation lives in `src/schemas/` and is applied via the
+`validateRequest(schema)` middleware helper.  `src/validators/` will grow if
+additional route-local validator modules are introduced; for now it deliberately
+contains only the user profile validator.  Do not move `user.validators.ts` into
+`src/schemas/` — doing so would break the import path used in
+`src/__tests__/validateRequest.user.validators.test.ts`.
+
 ## 2. Error Taxonomy
 
 The API uses a structured error response format to ensure consistency and easier debugging.
@@ -185,3 +203,33 @@ Mutation endpoints support idempotency via the `Idempotency-Key` header.
 
 - `MANIFEST_PII_RETENTION_DAYS`: seller raw manifest PII retention window (default `30`)
 - `EVIDENCE_METADATA_RETENTION_DAYS`: evidence metadata retention window (default `90`)
+
+## 13. Stellar Route Consolidation (routes-d → backend)
+
+Previously a top-level `routes-d/` package existed alongside the monorepo root.
+It contained five Stellar route modules with their own isolated test suite:
+
+| Former file | Migrated to |
+|---|---|
+| `routes-d/routes/stellar.payments.ts` | `backend/src/routes/stellar.payments.ts` |
+| `routes-d/routes/stellar.ledger.ts` | `backend/src/routes/stellar.ledger.ts` |
+| `routes-d/routes/stellar.payment.strictSend.ts` | `backend/src/routes/stellar.payment.strictSend.ts` |
+| `routes-d/routes/stellar.payment.strictReceive.ts` | `backend/src/routes/stellar.payment.strictReceive.ts` |
+| `routes-d/routes/stellar.trustline.ts` | `backend/src/routes/stellar.trustline.ts` |
+
+All five are now wired into `publicApi.router.ts` and share the project-wide
+`horizonServer` singleton from `config/stellar.ts`.
+
+### Exposed endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/stellar/account/:address/payments` | Paginated payment history |
+| GET | `/stellar/ledger/latest` | Latest closed ledger info |
+| POST | `/stellar/payments/strict-send` | Build strict-send XDR |
+| POST | `/stellar/payments/strict-receive` | Build strict-receive XDR |
+| POST | `/stellar/trustline` | Add a trustline |
+| DELETE | `/stellar/trustline` | Remove a trustline |
+
+The `routes-d/` directory has been removed. Do not recreate it — any new
+Stellar routes belong in `backend/src/routes/` following the same pattern.

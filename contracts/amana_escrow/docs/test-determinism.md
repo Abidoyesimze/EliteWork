@@ -176,6 +176,14 @@ count) in `.github/workflows/contract-determinism.yml`, which also fails if the
 regenerated snapshots differ from the committed ones. This script is the authoritative check for
 determinism; local spot checks (`cargo test` once) are insufficient.
 
+The script itself is covered by
+[`scripts/__tests__/verify-test-determinism.test.mjs`](../../../scripts/__tests__/verify-test-determinism.test.mjs),
+which executes it with a stubbed `cargo` and asserts the passing branch
+(identical summaries across runs) as well as the failing branches (a run that
+fails, summaries that vary between runs, a missing contract directory). The
+suite runs in the `Scripts Unit Tests` CI job, so a bug in the checker cannot
+silently disable the determinism gate.
+
 ---
 
 ## 7. Adding a new test — checklist
